@@ -52,6 +52,21 @@ const assurances = [
     { title: 'Secure checkout', detail: 'Payments protected at every step' },
 ];
 
+const paymentMethods = [
+    { src: '/assets/payments/upi.svg', alt: 'UPI', className: 'h-5 w-10' },
+    { src: '/assets/payments/visa.svg', alt: 'Visa', className: 'h-6 w-8' },
+    {
+        src: '/assets/payments/rupay.svg',
+        alt: 'RuPay',
+        className: 'h-6 w-11',
+    },
+    {
+        src: '/assets/payments/mastercard.svg',
+        alt: 'Mastercard',
+        className: 'h-6 w-10',
+    },
+];
+
 export function SiteFooter({
     settings,
     footerAbout = 'We carefully source nature-led essentials for everyday rituals and mindful living.',
@@ -318,12 +333,16 @@ export function SiteFooter({
                             Secure payments
                         </p>
                         <div className="mt-4 flex flex-wrap gap-2 lg:justify-end">
-                            {['Visa', 'Mastercard', 'UPI'].map((payment) => (
+                            {paymentMethods.map((payment) => (
                                 <span
-                                    key={payment}
-                                    className="rounded-md border border-[#3e8e4f]/20 bg-white/35 px-2.5 py-1.5 text-xs font-semibold text-[#345b3d]"
+                                    key={payment.alt}
+                                    className="flex h-10 w-14 items-center justify-center rounded-lg border border-[#3e8e4f]/15 bg-white/55 px-1.5 shadow-sm"
                                 >
-                                    {payment}
+                                    <img
+                                        src={payment.src}
+                                        alt={payment.alt}
+                                        className={`${payment.className} object-contain`}
+                                    />
                                 </span>
                             ))}
                         </div>
@@ -341,7 +360,7 @@ export function SiteFooter({
                             href="https://meinstyn.com/"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-medium text-[#345b3d] transition hover:text-[#173c28]"
+                            className="meinstyn-shimmer font-semibold transition-opacity hover:opacity-75"
                         >
                             Meinstyn
                         </a>

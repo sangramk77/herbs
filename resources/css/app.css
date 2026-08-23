@@ -110,6 +110,38 @@
     }
 }
 
+@keyframes meinstyn-shimmer {
+    from {
+        background-position: 180% center;
+    }
+    to {
+        background-position: -80% center;
+    }
+}
+
+.meinstyn-shimmer {
+    background: linear-gradient(
+        110deg,
+        #345b3d 0%,
+        #345b3d 38%,
+        #8dc9a0 48%,
+        #8fb3df 54%,
+        #345b3d 64%,
+        #345b3d 100%
+    );
+    background-size: 240% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: meinstyn-shimmer 3.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .meinstyn-shimmer {
+        animation: none;
+    }
+}
+
 .herbs-footer-flow {
     position: relative;
     isolation: isolate;
