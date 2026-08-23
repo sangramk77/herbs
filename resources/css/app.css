@@ -13,9 +13,8 @@
 
 @theme {
     --font-sans:
-        'Poppins', ui-sans-serif, system-ui, sans-serif,
-        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-        'Noto Color Emoji';
+        'Poppins', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
     --font-display: 'Poppins', var(--font-sans);
 
     --radius-lg: var(--radius);
@@ -93,6 +92,71 @@
             100% 50%,
             50% 50%;
     }
+}
+
+@keyframes herbs-footer-flow {
+    0%,
+    100% {
+        background-position:
+            0% 50%,
+            0% 0%,
+            100% 100%;
+    }
+    50% {
+        background-position:
+            100% 50%,
+            100% 25%,
+            0% 75%;
+    }
+}
+
+.herbs-footer-flow {
+    position: relative;
+    isolation: isolate;
+    background-color: #f4f8ef;
+    background-image:
+        linear-gradient(
+            110deg,
+            #e6f2d8 0%,
+            #f7f8f2 32%,
+            #e9eef9 62%,
+            #dcefd1 100%
+        ),
+        radial-gradient(
+            circle at 12% 15%,
+            rgba(154, 212, 84, 0.34),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 88% 78%,
+            rgba(151, 181, 222, 0.26),
+            transparent 34%
+        );
+    background-size:
+        190% 190%,
+        135% 135%,
+        145% 145%;
+    animation: herbs-footer-flow 22s ease-in-out infinite;
+}
+
+.herbs-footer-flow::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: -20% -10%;
+    background:
+        radial-gradient(
+            ellipse at 28% 62%,
+            rgba(62, 142, 79, 0.12),
+            transparent 36%
+        ),
+        radial-gradient(
+            ellipse at 74% 28%,
+            rgba(151, 181, 222, 0.16),
+            transparent 38%
+        );
+    filter: blur(22px);
+    animation: frosty-wave 20s ease-in-out infinite;
 }
 
 .frosty-wave-bg {

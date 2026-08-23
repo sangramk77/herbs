@@ -7,7 +7,6 @@ import {
     Phone,
     Send,
     ShieldCheck,
-    Star,
 } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { toast } from 'sonner';
@@ -31,54 +30,31 @@ interface SiteFooterProps {
 const EMPTY_FOOTER_PAGES: FooterPage[] = [];
 
 const quickLinks = [
-    { href: '/about', label: 'About Us' },
-    { href: '/blog', label: 'Blog' },
-    { href: '/popular-products', label: 'Popular Products' },
-    { href: '/product', label: 'Rudraksha' },
-    { href: '/faq', label: 'FAQ' },
-    { href: '/contact', label: 'Contact' },
+    { href: '/about', label: 'Our story' },
+    { href: '/product', label: 'Shop all herbs' },
+    { href: '/popular-products', label: 'Popular products' },
+    { href: '/blog', label: 'Journal' },
+    { href: '/faq', label: 'Frequently asked questions' },
+    { href: '/contact', label: 'Contact us' },
 ];
 
 const accountLinks = [
-    { href: '/wishlist', label: 'My Wishlist' },
-    { href: '/login', label: 'Sign In' },
-    { href: '/dashboard', label: 'My Account' },
-    { href: '/cart', label: 'My Cart' },
+    { href: '/dashboard', label: 'My account' },
+    { href: '/wishlist', label: 'Wishlist' },
+    { href: '/cart', label: 'Shopping bag' },
+    { href: '/login', label: 'Sign in' },
 ];
 
-const stats = [
-    { value: '10,000+', label: 'Happy Customers' },
-    { value: '500+', label: 'Products' },
-    { value: '15+', label: 'Years of Trust' },
-    { value: '4.9★', label: 'Avg. Rating' },
-];
-
-const guarantees = [
-    {
-        emoji: '🪬',
-        title: '100% Authentic',
-        desc: 'Ethically sourced from Nepal & Indonesia',
-    },
-    {
-        emoji: '📦',
-        title: 'Carefully Packaged',
-        desc: 'Sacred items wrapped with reverence',
-    },
-    {
-        emoji: '🔄',
-        title: 'Easy Returns',
-        desc: 'Hassle-free returns within 7 days',
-    },
-    {
-        emoji: '🔒',
-        title: 'Secure Checkout',
-        desc: 'Your data & payments always protected',
-    },
+const assurances = [
+    { title: 'Authentically sourced', detail: 'Thoughtfully chosen with care' },
+    { title: 'Packed with care', detail: 'Prepared for a safe journey' },
+    { title: 'Easy returns', detail: 'Simple support when you need it' },
+    { title: 'Secure checkout', detail: 'Payments protected at every step' },
 ];
 
 export function SiteFooter({
     settings,
-    footerAbout = 'We are dedicated to providing authentic and certified Rudraksha beads sourced directly from Nepal and Indonesia.',
+    footerAbout = 'We carefully source nature-led essentials for everyday rituals and mindful living.',
     footerPages = EMPTY_FOOTER_PAGES,
 }: SiteFooterProps) {
     const {
@@ -92,36 +68,43 @@ export function SiteFooter({
         reset,
     } = useForm({ email: '' });
 
-    const handleSubscribe = (e: FormEvent) => {
-        e.preventDefault();
+    const handleSubscribe = (event: FormEvent) => {
+        event.preventDefault();
         const email = data.email.trim();
+
         if (!email) {
             setError('email', 'Email is required.');
             return;
         }
+
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             setError('email', 'Enter a valid email address.');
             return;
         }
+
         post('/newsletter/subscribe', {
             preserveScroll: true,
             onSuccess: () => {
                 toast.success('Thanks for subscribing!');
                 reset();
             },
-            onError: () => {
-                toast.error('Please fix the errors and try again.');
-            },
+            onError: () => toast.error('Please fix the errors and try again.'),
         });
     };
 
     const currentYear = new Date().getFullYear();
-
+    const legalLinks = footerPages.slice(0, 6);
+    const customerLinks = [
+        ...accountLinks,
+        ...legalLinks.map((page) => ({
+            href: `/${page.seoUrl}`,
+            label: page.pageName,
+        })),
+    ];
     const socialLinks = [
         {
             href: settings.fbLink,
             label: 'Facebook',
-            color: 'hover:bg-blue-500',
             icon: (
                 <svg
                     className="h-4 w-4"
@@ -135,7 +118,6 @@ export function SiteFooter({
         {
             href: settings.twitterLink,
             label: 'X / Twitter',
-            color: 'hover:bg-stone-900',
             icon: (
                 <svg
                     className="h-4 w-4"
@@ -149,7 +131,6 @@ export function SiteFooter({
         {
             href: settings.instaLink,
             label: 'Instagram',
-            color: 'hover:bg-pink-500',
             icon: (
                 <svg
                     className="h-4 w-4"
@@ -163,7 +144,6 @@ export function SiteFooter({
         {
             href: settings.youtubeLink,
             label: 'YouTube',
-            color: 'hover:bg-red-500',
             icon: (
                 <svg
                     className="h-4 w-4"
@@ -174,352 +154,194 @@ export function SiteFooter({
                 </svg>
             ),
         },
-    ].filter((s) => Boolean(s.href));
-
-    const legalLinks = footerPages.slice(0, 6);
+    ].filter((social) => Boolean(social.href));
 
     return (
-        <footer className="relative overflow-hidden bg-gradient-to-b from-[#fff9f0] via-[#fff6ea] to-[#fef3e2] text-stone-800">
-            {/* ── Ambient background blobs ────────────────────────────────── */}
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-amber-200/35 blur-3xl" />
-                <div className="absolute top-0 right-0 h-80 w-80 rounded-full bg-orange-200/30 blur-3xl" />
-                <div className="absolute bottom-0 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-rose-100/40 blur-3xl" />
-                <div className="absolute right-10 bottom-20 h-64 w-64 rounded-full bg-amber-100/50 blur-2xl" />
+        <footer className="herbs-footer-flow overflow-hidden text-[#173c28]">
+            <div
+                className="pointer-events-none absolute inset-0"
+                aria-hidden="true"
+            >
+                <div className="absolute -top-40 left-[8%] h-96 w-96 rounded-full bg-[#9ad454]/15 blur-3xl" />
+                <div className="absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-[#97b5de]/18 blur-3xl" />
+                <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-[#3e8e4f]/25 to-transparent" />
             </div>
 
-            <div className="relative container mx-auto px-4 md:px-6">
-                {/* ══ STATS STRIP ═════════════════════════════════════════════ */}
-                <div className="mt-10 grid grid-cols-2 gap-px overflow-hidden rounded-3xl border border-white/70 bg-white/20 shadow-[0_12px_40px_-20px_rgba(120,53,15,0.2)] backdrop-blur-xl md:grid-cols-4">
-                    {stats.map((stat, i) => (
-                        <div
-                            key={stat.label}
-                            className={`flex flex-col items-center justify-center bg-white/50 px-6 py-5 text-center backdrop-blur-sm transition-colors hover:bg-white/70 ${i > 0 ? 'border-l border-white/50' : ''}`}
-                        >
-                            <span className="bg-linear-to-r from-amber-600 to-orange-500 bg-clip-text text-2xl font-black text-transparent md:text-3xl">
-                                {stat.value}
-                            </span>
-                            <span className="mt-1 text-xs font-medium text-stone-500">
-                                {stat.label}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-
-                {/* ══ MAIN COLUMNS ════════════════════════════════════════════ */}
-                <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-[1.7fr_1fr_1fr_1.6fr]">
-                    {/* ── Col 1: Brand ──────────────────────────────────────── */}
-                    <div className="relative overflow-hidden rounded-3xl border border-white/65 bg-white/55 p-7 shadow-[0_20px_60px_-20px_rgba(120,53,15,0.22)] backdrop-blur-xl md:col-span-2 xl:col-span-1">
-                        <div className="absolute inset-x-0 top-0 h-0.5 bg-linear-to-r from-transparent via-amber-400/70 to-transparent" />
-
-                        {/* Logo wordmark */}
+            <div className="relative container mx-auto px-4 py-12 md:px-6 md:py-16">
+                <section className="grid gap-10 border-b border-[#3e8e4f]/20 pb-12 lg:grid-cols-12 lg:gap-8">
+                    <div className="lg:col-span-4">
                         <img
                             src="/assets/brand/herbs-logo.svg"
                             alt="Herbs"
-                            className="h-14 w-auto"
+                            className="h-14 w-auto rounded-xl bg-[#f8fbf3] px-3 py-2"
                         />
-
-                        <h2 className="mt-5 text-2xl leading-snug font-bold tracking-tight text-stone-900 md:text-[1.6rem]">
-                            Wellness, naturally
-                            <br />
-                            to end the page.
+                        <h2 className="mt-6 max-w-sm text-3xl leading-tight font-semibold tracking-tight text-[#173c28] md:text-4xl">
+                            Small rituals. A more grounded day.
                         </h2>
-                        <p className="mt-3 text-sm leading-7 text-stone-500">
+                        <p className="mt-4 max-w-md text-sm leading-7 text-[#4c6651]">
                             {footerAbout}
                         </p>
 
-                        {/* Rating strip */}
-                        <div className="mt-5 flex items-center gap-3 rounded-2xl border border-amber-200/60 bg-amber-50/70 px-4 py-3">
-                            <div className="flex text-amber-400">
-                                {[...Array(5)].map((_, i) => (
-                                    <Star
-                                        key={i}
-                                        className="h-4 w-4 fill-current"
-                                    />
-                                ))}
-                            </div>
-                            <div>
-                                <p className="text-xs font-bold text-stone-800">
-                                    4.9 / 5 from 2,400+ reviews
-                                </p>
-                                <p className="text-[11px] text-stone-500">
-                                    Trusted by customers across India
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Contact */}
-                        <div className="mt-5 space-y-2">
-                            <div className="flex items-start gap-3 rounded-2xl border border-white/70 bg-white/50 px-4 py-3 backdrop-blur-sm">
-                                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-                                <p
-                                    className="text-sm leading-6 text-stone-600"
-                                    dangerouslySetInnerHTML={{
-                                        __html: settings.address,
-                                    }}
-                                />
-                            </div>
-                            <div className="space-y-2">
+                        <div className="mt-6 flex flex-wrap gap-2">
+                            {socialLinks.map((social) => (
                                 <a
-                                    href={`tel:${settings.phone1}`}
-                                    className="flex items-center gap-2 rounded-2xl border border-white/70 bg-white/50 px-3 py-3 text-sm text-stone-700 backdrop-blur-sm transition-all hover:border-teal-300/60 hover:bg-teal-50/50 hover:text-teal-900"
+                                    key={social.label}
+                                    href={social.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label={social.label}
+                                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#3e8e4f]/20 bg-white/35 text-[#285f38] transition hover:-translate-y-0.5 hover:border-[#3e8e4f]/45 hover:bg-[#3e8e4f] hover:text-white"
                                 >
-                                    <Phone className="h-4 w-4 shrink-0 text-teal-600" />
-                                    <span>{settings.phone1}</span>
+                                    {social.icon}
                                 </a>
-                                <a
-                                    href={`mailto:${settings.email1}`}
-                                    className="flex items-center gap-2 rounded-2xl border border-white/70 bg-white/50 px-3 py-3 text-sm text-stone-700 backdrop-blur-sm transition-all hover:border-teal-300/60 hover:bg-teal-50/50 hover:text-teal-900"
-                                >
-                                    <Mail className="h-4 w-4 shrink-0 text-teal-600" />
-                                    <span className="truncate">
-                                        {settings.email1}
-                                    </span>
-                                </a>
-                            </div>
+                            ))}
                         </div>
-
-                        {/* Socials */}
-                        {socialLinks.length > 0 && (
-                            <div className="mt-5 flex flex-wrap gap-2">
-                                {socialLinks.map((s) => (
-                                    <a
-                                        key={s.label}
-                                        href={s.href}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className={`group inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-white/60 text-stone-600 backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:text-white hover:shadow-lg ${s.color}`}
-                                        title={s.label}
-                                    >
-                                        {s.icon}
-                                    </a>
-                                ))}
-                            </div>
-                        )}
                     </div>
 
-                    {/* ── Col 2: Quick Links ────────────────────────────────── */}
-                    <div className="flex flex-col rounded-3xl border border-white/65 bg-white/50 p-6 shadow-[0_16px_50px_-22px_rgba(120,53,15,0.18)] backdrop-blur-xl">
-                        <div className="inline-flex items-center rounded-full border border-amber-300/55 bg-amber-50/80 px-3 py-1 text-[10px] font-bold tracking-[0.3em] text-amber-700 uppercase">
-                            Navigate
-                        </div>
-                        <h3 className="mt-3 text-lg font-bold text-stone-900">
-                            Quick links
-                        </h3>
-                        <nav className="mt-3 flex-1 space-y-0.5">
-                            {quickLinks.map((item) => (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className="group/link flex items-center justify-between rounded-xl border border-transparent px-3 py-2.5 text-sm text-stone-600 transition-all duration-200 hover:border-teal-200/70 hover:bg-teal-50/60 hover:pl-4 hover:text-teal-900"
-                                >
-                                    <span>{item.label}</span>
-                                    <ArrowRight className="h-3.5 w-3.5 shrink-0 text-amber-600 opacity-0 transition-all duration-200 group-hover/link:translate-x-0.5 group-hover/link:opacity-100" />
-                                </Link>
-                            ))}
-                        </nav>
+                    <FooterLinks title="Explore" links={quickLinks} />
+                    <FooterLinks title="Your account" links={customerLinks} />
 
-                        {/* Authenticity badge */}
-                        <div className="mt-4 overflow-hidden rounded-2xl border border-amber-200/70 bg-linear-to-br from-amber-50 to-orange-50/80 p-4">
-                            <div className="flex items-center gap-2.5">
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-400/20 text-xl">
-                                    🪬
-                                </div>
-                                <div>
-                                    <p className="text-xs font-bold text-amber-900">
-                                        100% Authentic
-                                    </p>
-                                    <p className="mt-0.5 text-[11px] leading-4 text-stone-500">
-                                        Certified, ethically sourced from Nepal
-                                        & Indonesia
-                                    </p>
-                                </div>
+                    <section
+                        className="lg:col-span-4"
+                        aria-labelledby="footer-newsletter-heading"
+                    >
+                        <div className="rounded-3xl border border-[#3e8e4f]/20 bg-white/45 p-6 shadow-[0_18px_50px_-30px_rgba(20,83,45,0.38)] backdrop-blur-sm">
+                            <div className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.18em] text-[#9ad454] uppercase">
+                                <ShieldCheck className="h-4 w-4" />
+                                The herbs letter
                             </div>
-                            <Link
-                                href="/about"
-                                className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 transition-colors hover:text-amber-900"
+                            <h3
+                                id="footer-newsletter-heading"
+                                className="mt-4 text-2xl font-semibold text-[#173c28]"
                             >
-                                Learn more <ArrowRight className="h-3 w-3" />
-                            </Link>
-                        </div>
-                    </div>
-
-                    {/* ── Col 3: Account & Policies ─────────────────────────── */}
-                    <div className="flex flex-col rounded-3xl border border-white/65 bg-white/50 p-6 shadow-[0_16px_50px_-22px_rgba(120,53,15,0.18)] backdrop-blur-xl">
-                        <div className="inline-flex items-center rounded-full border border-amber-300/55 bg-amber-50/80 px-3 py-1 text-[10px] font-bold tracking-[0.3em] text-amber-700 uppercase">
-                            Support
-                        </div>
-                        <h3 className="mt-3 text-lg font-bold text-stone-900">
-                            Account & Policies
-                        </h3>
-                        <nav className="mt-3 space-y-0.5">
-                            {accountLinks.map((item) => (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className="group/link flex items-center justify-between rounded-xl border border-transparent px-3 py-2.5 text-sm text-stone-600 transition-all duration-200 hover:border-teal-200/70 hover:bg-teal-50/60 hover:pl-4 hover:text-teal-900"
-                                >
-                                    <span>{item.label}</span>
-                                    <ArrowRight className="h-3.5 w-3.5 shrink-0 text-amber-600 opacity-0 transition-all duration-200 group-hover/link:translate-x-0.5 group-hover/link:opacity-100" />
-                                </Link>
-                            ))}
-                            {legalLinks.map((page) => (
-                                <Link
-                                    key={page.seoUrl}
-                                    href={`/${page.seoUrl}`}
-                                    className="group/link flex items-center justify-between rounded-xl border border-transparent px-3 py-2.5 text-sm text-stone-600 transition-all duration-200 hover:border-teal-200/70 hover:bg-teal-50/60 hover:pl-4 hover:text-teal-900"
-                                >
-                                    <span>{page.pageName}</span>
-                                    <ArrowRight className="h-3.5 w-3.5 shrink-0 text-amber-600 opacity-0 transition-all duration-200 group-hover/link:translate-x-0.5 group-hover/link:opacity-100" />
-                                </Link>
-                            ))}
-                        </nav>
-
-                        {/* Guarantee mini-cards */}
-                        <div className="mt-4 flex-1 space-y-2">
-                            {guarantees.slice(2).map((g) => (
-                                <div
-                                    key={g.title}
-                                    className="flex items-start gap-3 rounded-2xl border border-white/70 bg-white/60 px-4 py-3 backdrop-blur-sm"
-                                >
-                                    <span className="mt-0.5 text-base leading-none">
-                                        {g.emoji}
-                                    </span>
-                                    <div>
-                                        <p className="text-xs font-bold text-stone-800">
-                                            {g.title}
-                                        </p>
-                                        <p className="mt-0.5 text-[11px] leading-4 text-stone-500">
-                                            {g.desc}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* ── Col 4: Newsletter + Payments ──────────────────────── */}
-                    <div className="relative overflow-hidden rounded-3xl border border-white/65 bg-white/50 p-6 shadow-[0_16px_50px_-22px_rgba(120,53,15,0.18)] backdrop-blur-xl md:col-span-2 xl:col-span-1">
-                        <div className="absolute inset-x-0 top-0 h-0.5 bg-linear-to-r from-transparent via-orange-400/50 to-transparent" />
-
-                        <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/55 bg-amber-50/80 px-3 py-1 text-[10px] font-bold tracking-[0.3em] text-amber-700 uppercase">
-                            <ShieldCheck className="h-3 w-3" />
-                            Stay Connected
-                        </div>
-
-                        <h3 className="mt-4 text-2xl font-bold tracking-tight text-stone-900">
-                            Join the weekly circle.
-                        </h3>
-                        <p className="mt-2 text-sm leading-6 text-stone-500">
-                            Thoughtful updates on new arrivals, featured
-                            collections, and seasonal offers.
-                        </p>
-
-                        {/* Newsletter form */}
-                        <form
-                            onSubmit={handleSubscribe}
-                            className="mt-5"
-                            noValidate
-                        >
-                            <div className="flex gap-2 rounded-2xl border border-white/80 bg-white/70 p-1.5 shadow-sm backdrop-blur-sm">
-                                <Input
-                                    type="email"
-                                    placeholder="Your email address"
-                                    value={data.email}
-                                    onChange={(e) => {
-                                        setData('email', e.target.value);
-                                        clearErrors('email');
-                                    }}
-                                    className="h-11 flex-1 rounded-xl border-0 bg-transparent text-stone-900 placeholder:text-stone-400 focus-visible:ring-0 focus-visible:ring-offset-0"
-                                />
-                                <Button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="h-11 shrink-0 rounded-xl bg-linear-to-r from-amber-500 to-orange-500 px-5 text-sm font-semibold text-white shadow-[0_6px_20px_-6px_rgba(234,88,12,0.55)] transition-all hover:scale-[1.02] hover:brightness-110"
-                                >
-                                    <Send className="mr-1.5 h-3.5 w-3.5" />
-                                    Subscribe
-                                </Button>
-                            </div>
-                            <FormError message={errors.email} />
-                            <p className="mt-2 text-[11px] text-stone-400">
-                                No spam. Unsubscribe anytime.
+                                A little more calm, delivered monthly.
+                            </h3>
+                            <p className="mt-2 text-sm leading-6 text-[#4c6651]">
+                                New arrivals, thoughtful guides, and offers
+                                worth opening.
                             </p>
-                        </form>
 
-                        {/* Payments */}
-                        <div className="mt-5 rounded-2xl border border-white/70 bg-white/60 p-4 backdrop-blur-sm">
-                            <p className="text-[10px] font-bold tracking-[0.28em] text-amber-700 uppercase">
-                                We Accept
-                            </p>
-                            <div className="mt-3 flex flex-wrap gap-2">
-                                {[
-                                    { name: 'Visa', bg: 'bg-blue-600' },
-                                    { name: 'Mastercard', bg: 'bg-red-500' },
-                                    { name: 'UPI', bg: 'bg-violet-600' },
-                                ].map((pm) => (
-                                    <span
-                                        key={pm.name}
-                                        className="inline-flex items-center rounded-lg border border-white/80 bg-white px-3 py-1.5 text-xs font-bold text-stone-700 shadow-sm"
+                            <form
+                                onSubmit={handleSubscribe}
+                                className="mt-5"
+                                noValidate
+                            >
+                                <div className="flex rounded-xl bg-white p-1.5 shadow-lg shadow-black/10">
+                                    <Input
+                                        type="email"
+                                        placeholder="Email address"
+                                        value={data.email}
+                                        onChange={(event) => {
+                                            setData(
+                                                'email',
+                                                event.target.value,
+                                            );
+                                            clearErrors('email');
+                                        }}
+                                        className="h-11 flex-1 border-0 bg-transparent px-3 text-[#173c28] placeholder:text-[#78907d] focus-visible:ring-0 focus-visible:ring-offset-0"
+                                    />
+                                    <Button
+                                        type="submit"
+                                        disabled={processing}
+                                        className="h-11 rounded-lg bg-[#9ad454] px-4 font-semibold text-[#123321] transition hover:bg-[#b0e274]"
                                     >
-                                        <span
-                                            className={`mr-1.5 h-2 w-2 rounded-full ${pm.bg}`}
-                                        />
-                                        {pm.name}
-                                    </span>
-                                ))}
-                            </div>
+                                        <Send className="h-4 w-4" />
+                                        <span className="sr-only">
+                                            Subscribe
+                                        </span>
+                                    </Button>
+                                </div>
+                                <FormError message={errors.email} />
+                                <p className="mt-3 text-xs text-[#59725e]">
+                                    No noise. Unsubscribe whenever you like.
+                                </p>
+                            </form>
                         </div>
+                    </section>
+                </section>
 
-                        {/* Promise strip */}
-                        <div className="mt-3 rounded-2xl border border-amber-200/60 bg-linear-to-r from-amber-50/80 to-orange-50/60 px-4 py-3">
-                            <p className="text-[10px] font-bold tracking-[0.28em] text-amber-700 uppercase">
-                                Our Promise
-                            </p>
-                            <p className="mt-1.5 text-xs leading-5 text-stone-600">
-                                Designed for trust, clarity, and a calmer
-                                shopping experience — from first click to
-                                checkout.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* ══ GUARANTEES ROW ══════════════════════════════════════════ */}
-                <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-                    {guarantees.map((g) => (
-                        <div
-                            key={g.title}
-                            className="flex items-center gap-3 rounded-2xl border border-white/70 bg-white/50 px-4 py-3.5 backdrop-blur-sm transition-all hover:bg-white/70 hover:shadow-md"
-                        >
-                            <span className="text-xl leading-none">
-                                {g.emoji}
+                <section className="grid gap-5 border-b border-[#3e8e4f]/20 py-8 sm:grid-cols-2 lg:grid-cols-4">
+                    {assurances.map((assurance, index) => (
+                        <div key={assurance.title} className="flex gap-3">
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#9ad454]/15 text-xs font-bold text-[#9ad454]">
+                                0{index + 1}
                             </span>
                             <div>
-                                <p className="text-xs font-bold text-stone-800">
-                                    {g.title}
+                                <p className="text-sm font-medium text-[#173c28]">
+                                    {assurance.title}
                                 </p>
-                                <p className="mt-0.5 text-[11px] leading-4 text-stone-500">
-                                    {g.desc}
+                                <p className="mt-1 text-xs leading-5 text-[#59725e]">
+                                    {assurance.detail}
                                 </p>
                             </div>
                         </div>
                     ))}
-                </div>
+                </section>
 
-                {/* ══ BOTTOM BAR ══════════════════════════════════════════════ */}
-                <div className="mt-4 mb-6 flex flex-col items-center gap-3 rounded-2xl border border-white/60 bg-white/45 px-5 py-4 backdrop-blur-sm sm:flex-row sm:justify-between">
-                    <p className="flex items-center gap-2 text-sm text-stone-500">
-                        <Heart className="h-4 w-4 fill-rose-400 text-rose-400" />
-                        © {currentYear} Herbs. Crafted with care.
+                <section className="grid gap-8 pt-8 lg:grid-cols-12">
+                    <div className="lg:col-span-4">
+                        <p className="text-xs font-semibold tracking-[0.2em] text-[#9ad454] uppercase">
+                            We are here to help
+                        </p>
+                        <div className="mt-4 space-y-3 text-sm text-[#345b3d]">
+                            <a
+                                href={`tel:${settings.phone1}`}
+                                className="flex items-center gap-3 transition hover:text-[#173c28]"
+                            >
+                                <Phone className="h-4 w-4 text-[#3e8e4f]" />
+                                {settings.phone1}
+                            </a>
+                            <a
+                                href={`mailto:${settings.email1}`}
+                                className="flex items-center gap-3 transition hover:text-[#173c28]"
+                            >
+                                <Mail className="h-4 w-4 text-[#3e8e4f]" />
+                                {settings.email1}
+                            </a>
+                        </div>
+                    </div>
+                    <div className="lg:col-span-5">
+                        <p className="text-xs font-semibold tracking-[0.2em] text-[#9ad454] uppercase">
+                            Find us
+                        </p>
+                        <div className="mt-4 flex items-start gap-3 text-sm leading-6 text-[#345b3d]">
+                            <MapPin className="mt-1 h-4 w-4 shrink-0 text-[#3e8e4f]" />
+                            <p
+                                dangerouslySetInnerHTML={{
+                                    __html: settings.address,
+                                }}
+                            />
+                        </div>
+                    </div>
+                    <div className="lg:col-span-3 lg:text-right">
+                        <p className="text-xs font-semibold tracking-[0.2em] text-[#9ad454] uppercase">
+                            Secure payments
+                        </p>
+                        <div className="mt-4 flex flex-wrap gap-2 lg:justify-end">
+                            {['Visa', 'Mastercard', 'UPI'].map((payment) => (
+                                <span
+                                    key={payment}
+                                    className="rounded-md border border-[#3e8e4f]/20 bg-white/35 px-2.5 py-1.5 text-xs font-semibold text-[#345b3d]"
+                                >
+                                    {payment}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                <div className="mt-10 flex flex-col gap-3 border-t border-[#3e8e4f]/20 pt-6 text-xs text-[#59725e] sm:flex-row sm:items-center sm:justify-between">
+                    <p className="flex items-center gap-2">
+                        <Heart className="h-3.5 w-3.5 fill-[#6b9bd2] text-[#6b9bd2]" />
+                        © {currentYear} Herbs. Naturally good.
                     </p>
-                    <p className="text-sm text-stone-400">
+                    <p>
                         Developed by{' '}
                         <a
                             href="https://meinstyn.com/"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-semibold text-stone-700 transition-colors hover:text-orange-600"
+                            className="font-medium text-[#345b3d] transition hover:text-[#173c28]"
                         >
                             Meinstyn
                         </a>
@@ -527,5 +349,34 @@ export function SiteFooter({
                 </div>
             </div>
         </footer>
+    );
+}
+
+function FooterLinks({
+    title,
+    links,
+}: {
+    title: string;
+    links: { href: string; label: string }[];
+}) {
+    return (
+        <nav className="lg:col-span-2" aria-label={title}>
+            <p className="text-xs font-semibold tracking-[0.2em] text-[#2e7b43] uppercase">
+                {title}
+            </p>
+            <ul className="mt-5 space-y-3">
+                {links.map((item) => (
+                    <li key={item.href}>
+                        <Link
+                            href={item.href}
+                            className="group inline-flex items-center gap-1.5 text-sm font-medium text-[#345b3d] transition-[color,filter] duration-200 hover:text-[#2f9e5b] hover:drop-shadow-[0_0_10px_rgba(47,158,91,0.38)]"
+                        >
+                            {item.label}
+                            <ArrowRight className="h-3.5 w-3.5 opacity-0 transition group-hover:translate-x-0.5 group-hover:opacity-100" />
+                        </Link>
+                    </li>
+                ))}
+            </ul>
+        </nav>
     );
 }
