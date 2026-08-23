@@ -55,7 +55,7 @@ export function HeaderMiddle({
                         <Link href="/" className="block">
                             <img
                                 src={logoUrl}
-                                alt="Natural Rudraksh"
+                                alt="Herbs"
                                 className="h-9 w-auto md:h-14 lg:h-24"
                             />
                         </Link>

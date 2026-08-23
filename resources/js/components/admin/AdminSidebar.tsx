@@ -229,17 +229,17 @@ export function AdminSidebar({
                     {collapsed ? (
                         // Show compact logo/icon when collapsed
                         <img
-                            src="/assets/img/favi.png"
-                            alt="Logo"
+                            src="/assets/brand/herbs-mark.svg"
+                            alt="Herbs"
                             className="h-20 w-20 object-contain"
                         />
                     ) : (
                         // Show full logo when expanded
                         <>
                             <img
-                                src="/assets/img/favi.png"
-                                alt="Natural Rudraksh"
-                                className="h-16 w-auto max-w-52 object-contain"
+                                src="/assets/brand/herbs-logo.svg"
+                                alt="Herbs"
+                                className="h-12 w-auto max-w-52 object-contain"
                             />
                         </>
                     )}

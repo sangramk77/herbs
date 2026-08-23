@@ -68,7 +68,7 @@ export function MobileMenu({
                                 >
                                     <img
                                         src={logoUrl}
-                                        alt="Natural Rudraksh"
+                                        alt="Herbs"
                                         className={`w-auto ${isHomePage ? 'h-12' : 'h-9'}`}
                                     />
                                 </Link>

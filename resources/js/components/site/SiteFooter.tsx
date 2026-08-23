@@ -213,22 +213,14 @@ export function SiteFooter({
                         <div className="absolute inset-x-0 top-0 h-0.5 bg-linear-to-r from-transparent via-amber-400/70 to-transparent" />
 
                         {/* Logo wordmark */}
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-linear-to-br from-amber-400 to-orange-500 text-white shadow-[0_6px_16px_-4px_rgba(234,88,12,0.5)]">
-                                <span className="text-lg font-black">V</span>
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-bold tracking-[0.32em] text-amber-700 uppercase">
-                                    Est. 2008
-                                </p>
-                                <p className="text-base leading-tight font-bold text-stone-900">
-                                    Vastu World
-                                </p>
-                            </div>
-                        </div>
+                        <img
+                            src="/assets/brand/herbs-logo.svg"
+                            alt="Herbs"
+                            className="h-14 w-auto"
+                        />
 
                         <h2 className="mt-5 text-2xl leading-snug font-bold tracking-tight text-stone-900 md:text-[1.6rem]">
-                            A softer, calmer place
+                            Wellness, naturally
                             <br />
                             to end the page.
                         </h2>
@@ -519,7 +511,7 @@ export function SiteFooter({
                 <div className="mt-4 mb-6 flex flex-col items-center gap-3 rounded-2xl border border-white/60 bg-white/45 px-5 py-4 backdrop-blur-sm sm:flex-row sm:justify-between">
                     <p className="flex items-center gap-2 text-sm text-stone-500">
                         <Heart className="h-4 w-4 fill-rose-400 text-rose-400" />
-                        © {currentYear} Vastu World. Crafted with care.
+                        © {currentYear} Herbs. Crafted with care.
                     </p>
                     <p className="text-sm text-stone-400">
                         Developed by{' '}

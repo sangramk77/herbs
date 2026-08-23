@@ -121,7 +121,7 @@ export function MainNavigation({
                     <Link href="/" className="flex shrink-0 items-center">
                         <img
                             src={logoUrl}
-                            alt="Natural Rudraksh"
+                            alt="Herbs"
                             className="h-12 w-auto"
                         />
                     </Link>

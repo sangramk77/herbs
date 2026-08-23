@@ -11,8 +11,8 @@ export default function AppLogoIcon({
     return (
         <span className={classes}>
             <img
-                src="/assets/img/logos.png"
-                alt="Natural Rudraksh"
+                src="/assets/brand/herbs-mark.svg"
+                alt="Herbs"
                 className="h-full w-full object-contain"
                 {...props}
             />

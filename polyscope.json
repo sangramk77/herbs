@@ -1,9 +1,0 @@
-{
-  "scripts": {
-    "setup": "herd link",
-    "archive": "herd unlink"
-  },
-  "preview": {
-    "url": "http://{{folder}}.test"
-  }
-}

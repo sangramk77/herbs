@@ -60,15 +60,15 @@ export function AppSidebar() {
                                 <span className="flex items-center justify-center">
                                     <span className="flex items-center justify-center group-data-[state=collapsed]:hidden">
                                         <img
-                                            src="/assets/img/favi.png"
-                                            alt="Natural Rudraksh"
+                                            src="/assets/brand/herbs-mark.svg"
+                                            alt="Herbs"
                                             className="h-[49px] w-auto object-contain md:h-[49px]"
                                         />
                                     </span>
                                     <span className="hidden items-center justify-center group-data-[state=collapsed]:flex">
                                         <img
-                                            src="/assets/img/favi.png"
-                                            alt="Natural Rudraksh"
+                                            src="/assets/brand/herbs-mark.svg"
+                                            alt="Herbs"
                                             className="h-10 w-10 object-contain"
                                         />
                                     </span>
