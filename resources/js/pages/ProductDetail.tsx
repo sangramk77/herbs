@@ -9,7 +9,8 @@ import {
     ShoppingCart,
 } from 'lucide-react';
 import { useState } from 'react';
-import { SiFacebook, SiInstagram, SiLinkedin, SiX } from 'react-icons/si';
+import { FaLinkedin } from 'react-icons/fa6';
+import { SiFacebook, SiInstagram, SiX } from 'react-icons/si';
 import { toast } from 'sonner';
 import Lightbox from 'yet-another-react-lightbox';
 import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
@@ -640,7 +641,7 @@ export default function ProductDetail({
                                                 rel="noopener noreferrer"
                                                 className="rounded-full bg-slate-100 p-2 text-slate-600 transition-colors hover:bg-blue-100 hover:text-blue-700"
                                             >
-                                                <SiLinkedin className="h-4 w-4" />
+                                                <FaLinkedin className="h-4 w-4" />
                                             </a>
                                             <a
                                                 href="https://www.instagram.com/"
