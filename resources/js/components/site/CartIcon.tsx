@@ -37,7 +37,7 @@ export function CartIcon({ count, price, items }: CartIconProps) {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <div className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-accent">
+                <div className="flex cursor-pointer items-center gap-3 rounded-xl px-2.5 py-2 transition-colors hover:bg-white">
                     <div className="relative">
                         <ShoppingCart className="h-6 w-6" />
                         {count > 0 && (
@@ -50,19 +50,10 @@ export function CartIcon({ count, price, items }: CartIconProps) {
                         )}
                     </div>
                     <div className="hidden flex-col lg:flex">
-                        <span className="text-xs font-medium text-amber-700">
+                        <span className="text-xs font-medium text-[#2e7b43]">
                             Your Cart
                         </span>
-                        <span
-                            className="text-sm font-extrabold tracking-tight"
-                            style={{
-                                background:
-                                    'linear-gradient(90deg, #ea580c, #dc2626)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                backgroundClip: 'text',
-                            }}
-                        >
+                        <span className="text-sm font-extrabold tracking-tight text-[#173c28]">
                             ₹{price.toLocaleString('en-IN')}
                         </span>
                     </div>

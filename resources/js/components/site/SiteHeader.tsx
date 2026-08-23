@@ -48,7 +48,7 @@ export function SiteHeader({
         };
     }>();
     const isHomePage = page.component === 'Home';
-    const logoUrl = '/assets/img/logos.png';
+    const logoUrl = '/assets/brand/herbs-logo.svg';
     const resolvedIsAuthenticated = Boolean(user ?? page.props.auth?.user);
     const resolvedUserName = user?.name ?? page.props.auth?.user?.name;
     const resolvedUserAvatar = user?.avatar ?? page.props.auth?.user?.avatar;

@@ -53,9 +53,9 @@ export default function AdminLogin() {
                     {/* Logo/Header */}
                     <div className="mb-6 text-center">
                         <img
-                            src="/assets/img/logos.png"
-                            alt="Natural Rudraksh"
-                            className="mx-auto h-36 w-auto object-contain drop-shadow-md"
+                            src="/assets/brand/herbs-logo.svg"
+                            alt="Herbs"
+                            className="mx-auto h-28 w-auto object-contain drop-shadow-md"
                         />
                     </div>
 

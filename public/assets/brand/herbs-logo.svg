@@ -1,4 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 430 128" role="img" aria-labelledby="title desc">
+  <title id="title">Herbs</title><desc id="desc">Herbs botanical wordmark with a pair of green leaves.</desc>
   <defs><linearGradient id="leaf" x1="20" y1="18" x2="108" y2="112" gradientUnits="userSpaceOnUse"><stop stop-color="#9AD454"/><stop offset=".5" stop-color="#3E8E4F"/><stop offset="1" stop-color="#14532D"/></linearGradient></defs>
   <circle cx="64" cy="64" r="58" fill="#F3F8EC"/><circle cx="64" cy="64" r="55" fill="none" stroke="#D6E7C6" stroke-width="3"/><path fill="url(#leaf)" d="M64 104c-3-25 4-52 25-70 11-9 24-13 34-14-1 11-5 25-14 35-18 21-45 28-70 25 8 8 16 16 25 24Z"/><path fill="#65A952" d="M63 104c2-23-5-45-21-59-9-8-20-11-30-12 1 10 4 21 12 30 14 17 34 22 54 20-5 7-10 14-15 21Z"/><path d="M35 49c17 12 29 27 37 45M94 36C77 52 67 69 63 94" fill="none" stroke="#F3F8EC" stroke-linecap="round" stroke-width="3"/><circle cx="37" cy="91" r="4" fill="#E6B45C"/>
+  <text x="145" y="69" fill="#1D4D36" font-family="Georgia, serif" font-size="58" font-weight="700" letter-spacing="1">Herbs</text><text x="149" y="94" fill="#6B8060" font-family="Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="4">NATURALLY GOOD</text>
 </svg>

@@ -13,9 +13,8 @@
 
 @theme {
     --font-sans:
-        'Poppins', ui-sans-serif, system-ui, sans-serif,
-        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-        'Noto Color Emoji';
+        'Poppins', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
     --font-display: 'Poppins', var(--font-sans);
 
     --radius-lg: var(--radius);
@@ -95,24 +94,121 @@
     }
 }
 
+@keyframes herbs-footer-flow {
+    0%,
+    100% {
+        background-position:
+            0% 50%,
+            0% 0%,
+            100% 100%;
+    }
+    50% {
+        background-position:
+            100% 50%,
+            100% 25%,
+            0% 75%;
+    }
+}
+
+@keyframes meinstyn-shimmer {
+    from {
+        background-position: 180% center;
+    }
+    to {
+        background-position: -80% center;
+    }
+}
+
+.meinstyn-shimmer {
+    background: linear-gradient(
+        110deg,
+        #345b3d 0%,
+        #345b3d 38%,
+        #8dc9a0 48%,
+        #8fb3df 54%,
+        #345b3d 64%,
+        #345b3d 100%
+    );
+    background-size: 240% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: meinstyn-shimmer 3.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .meinstyn-shimmer {
+        animation: none;
+    }
+}
+
+.herbs-footer-flow {
+    position: relative;
+    isolation: isolate;
+    background-color: #f4f8ef;
+    background-image:
+        linear-gradient(
+            110deg,
+            #e6f2d8 0%,
+            #f7f8f2 32%,
+            #e9eef9 62%,
+            #dcefd1 100%
+        ),
+        radial-gradient(
+            circle at 12% 15%,
+            rgba(154, 212, 84, 0.34),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 88% 78%,
+            rgba(151, 181, 222, 0.26),
+            transparent 34%
+        );
+    background-size:
+        190% 190%,
+        135% 135%,
+        145% 145%;
+    animation: herbs-footer-flow 22s ease-in-out infinite;
+}
+
+.herbs-footer-flow::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: -20% -10%;
+    background:
+        radial-gradient(
+            ellipse at 28% 62%,
+            rgba(62, 142, 79, 0.12),
+            transparent 36%
+        ),
+        radial-gradient(
+            ellipse at 74% 28%,
+            rgba(151, 181, 222, 0.16),
+            transparent 38%
+        );
+    filter: blur(22px);
+    animation: frosty-wave 20s ease-in-out infinite;
+}
+
 .frosty-wave-bg {
     position: relative;
     background-image:
         radial-gradient(
             60% 80% at 0% 0%,
-            rgba(255, 250, 235, 0.75),
+            rgba(241, 249, 231, 0.88),
             transparent 60%
         ),
         radial-gradient(
             60% 80% at 100% 0%,
-            rgba(240, 190, 90, 0.45),
+            rgba(154, 212, 84, 0.32),
             transparent 60%
         ),
         linear-gradient(
             120deg,
-            rgba(255, 248, 230, 0.88),
-            rgba(255, 235, 195, 0.7),
-            rgba(255, 252, 240, 0.75)
+            rgba(250, 252, 246, 0.92),
+            rgba(234, 246, 219, 0.78),
+            rgba(250, 248, 237, 0.82)
         );
     background-size:
         200% 200%,
@@ -130,12 +226,12 @@
     background:
         radial-gradient(
             40% 50% at 20% 70%,
-            rgba(255, 235, 205, 0.6),
+            rgba(205, 232, 179, 0.58),
             transparent 60%
         ),
         radial-gradient(
             40% 50% at 80% 30%,
-            rgba(218, 165, 32, 0.4),
+            rgba(230, 180, 92, 0.28),
             transparent 60%
         );
     opacity: 0.8;
@@ -144,27 +240,27 @@
 
 .newsprint-bg {
     position: relative;
-    background-color: #f7f4ef;
+    background-color: #f5f8f0;
     background-image:
         radial-gradient(
             1px 1px at 20% 30%,
-            rgba(0, 0, 0, 0.05) 0,
+            rgba(20, 83, 45, 0.055) 0,
             transparent 1px
         ),
         radial-gradient(
             1px 1px at 70% 60%,
-            rgba(0, 0, 0, 0.04) 0,
+            rgba(20, 83, 45, 0.045) 0,
             transparent 1px
         ),
         radial-gradient(
             1px 1px at 40% 80%,
-            rgba(0, 0, 0, 0.03) 0,
+            rgba(20, 83, 45, 0.035) 0,
             transparent 1px
         ),
         repeating-linear-gradient(
             0deg,
-            rgba(0, 0, 0, 0.035),
-            rgba(0, 0, 0, 0.035) 1px,
+            rgba(20, 83, 45, 0.025),
+            rgba(20, 83, 45, 0.025) 1px,
             transparent 1px,
             transparent 6px
         );
@@ -173,24 +269,24 @@
 
 .aurora-glass-bg {
     position: relative;
-    background-color: #0f172a;
+    background-color: #102a1d;
     background-image:
         radial-gradient(
             60% 80% at 10% 10%,
-            rgba(34, 211, 238, 0.25),
+            rgba(154, 212, 84, 0.25),
             transparent 60%
         ),
         radial-gradient(
             60% 80% at 90% 20%,
-            rgba(99, 102, 241, 0.25),
+            rgba(62, 142, 79, 0.28),
             transparent 60%
         ),
         radial-gradient(
             60% 80% at 50% 90%,
-            rgba(16, 185, 129, 0.22),
+            rgba(230, 180, 92, 0.18),
             transparent 60%
         ),
-        linear-gradient(120deg, rgba(15, 23, 42, 0.75), rgba(30, 41, 59, 0.75));
+        linear-gradient(120deg, rgba(16, 42, 29, 0.8), rgba(20, 83, 45, 0.76));
     background-size:
         200% 200%,
         200% 200%,
@@ -220,182 +316,182 @@
 }
 
 :root {
-    /* Base colors - Warm cream background inspired by brand */
-    --background: oklch(0.985 0.008 75);
-    --foreground: oklch(0.25 0.02 45);
+    /* Base colors - clean sage canvas with forest-green typography */
+    --background: oklch(0.985 0.012 125);
+    --foreground: oklch(0.27 0.045 145);
 
-    /* Card colors - Subtle warm tint */
-    --card: oklch(0.995 0.005 70);
-    --card-foreground: oklch(0.25 0.02 45);
+    /* Card colors - softly lifted from the sage canvas */
+    --card: oklch(0.997 0.008 125);
+    --card-foreground: oklch(0.27 0.045 145);
 
     /* Popover colors */
-    --popover: oklch(0.995 0.005 70);
-    --popover-foreground: oklch(0.25 0.02 45);
+    --popover: oklch(0.997 0.008 125);
+    --popover-foreground: oklch(0.27 0.045 145);
 
     /* Primary brand color */
-    --primary: oklch(0.83 0.11 96);
-    --primary-foreground: oklch(0.2 0.02 45);
+    --primary: oklch(0.45 0.105 145);
+    --primary-foreground: oklch(0.985 0.012 125);
 
-    /* Secondary - Light Golden (from logo's lighter petals) */
-    --secondary: oklch(0.92 0.045 80);
-    --secondary-foreground: oklch(0.35 0.04 50);
+    /* Secondary - muted herb leaf */
+    --secondary: oklch(0.93 0.045 125);
+    --secondary-foreground: oklch(0.32 0.065 145);
 
-    /* Muted - Soft warm gray */
-    --muted: oklch(0.95 0.015 75);
-    --muted-foreground: oklch(0.52 0.02 60);
+    /* Muted - pale sage */
+    --muted: oklch(0.955 0.025 125);
+    --muted-foreground: oklch(0.5 0.035 145);
 
-    /* Accent - Bright Gold (from logo highlights) */
-    --accent: oklch(0.88 0.095 85);
-    --accent-foreground: oklch(0.35 0.04 50);
+    /* Accent - warm botanical gold, reserved for highlights */
+    --accent: oklch(0.84 0.105 90);
+    --accent-foreground: oklch(0.31 0.055 112);
 
-    /* Destructive - Warm red that complements gold */
+    /* Destructive - earthy red that complements the botanical palette */
     --destructive: oklch(0.55 0.22 25);
-    --destructive-foreground: oklch(0.99 0.005 70);
+    --destructive-foreground: oklch(0.99 0.005 125);
 
-    /* Border & Input - Subtle golden tint */
-    --border: oklch(0.88 0.025 75);
-    --input: oklch(0.88 0.025 75);
-    --ring: oklch(0.58 0.145 75);
+    /* Border & Input - low-contrast leaf green */
+    --border: oklch(0.87 0.035 130);
+    --input: oklch(0.87 0.035 130);
+    --ring: oklch(0.55 0.12 145);
 
-    /* Chart colors - Golden palette variations */
-    --chart-1: oklch(0.65 0.135 75); /* Deep gold */
-    --chart-2: oklch(0.75 0.115 85); /* Medium gold */
-    --chart-3: oklch(0.85 0.085 80); /* Light gold */
-    --chart-4: oklch(0.55 0.125 70); /* Bronze */
-    --chart-5: oklch(0.7 0.105 65); /* Amber */
+    /* Chart colors - foliage with a warm harvest accent */
+    --chart-1: oklch(0.5 0.12 145);
+    --chart-2: oklch(0.66 0.13 135);
+    --chart-3: oklch(0.75 0.12 110);
+    --chart-4: oklch(0.65 0.115 90);
+    --chart-5: oklch(0.54 0.08 170);
 
     /* Border radius */
     --radius: 0.625rem;
 
-    /* Sidebar - Cool indigo/violet theme */
-    --sidebar: oklch(0.97 0.018 270); /* soft lavender-white */
-    --sidebar-foreground: oklch(0.28 0.04 270); /* deep indigo text */
-    --sidebar-primary: oklch(0.55 0.22 270); /* indigo */
-    --sidebar-primary-foreground: oklch(0.99 0.005 270);
-    --sidebar-accent: oklch(0.91 0.045 270); /* light indigo hover */
-    --sidebar-accent-foreground: oklch(0.3 0.05 270);
-    --sidebar-border: oklch(0.87 0.03 270); /* soft indigo border */
-    --sidebar-ring: oklch(0.55 0.22 270);
+    /* Sidebar - calm sage navigation with clear forest-green actions */
+    --sidebar: oklch(0.965 0.025 130);
+    --sidebar-foreground: oklch(0.29 0.055 145);
+    --sidebar-primary: oklch(0.45 0.105 145);
+    --sidebar-primary-foreground: oklch(0.985 0.012 125);
+    --sidebar-accent: oklch(0.9 0.05 125);
+    --sidebar-accent-foreground: oklch(0.3 0.06 145);
+    --sidebar-border: oklch(0.85 0.04 130);
+    --sidebar-ring: oklch(0.55 0.12 145);
 }
 
 .dark {
-    /* Base colors - Deep charcoal with warm undertone */
-    --background: oklch(0.18 0.015 45);
-    --foreground: oklch(0.95 0.01 75);
+    /* Base colors - deep forest, not neutral black */
+    --background: oklch(0.19 0.025 145);
+    --foreground: oklch(0.95 0.022 125);
 
-    /* Card colors - Slightly lighter than background */
-    --card: oklch(0.22 0.018 45);
-    --card-foreground: oklch(0.95 0.01 75);
+    /* Card colors - slightly lifted evergreen */
+    --card: oklch(0.235 0.03 145);
+    --card-foreground: oklch(0.95 0.022 125);
 
     /* Popover colors */
-    --popover: oklch(0.22 0.018 45);
-    --popover-foreground: oklch(0.95 0.01 75);
+    --popover: oklch(0.235 0.03 145);
+    --popover-foreground: oklch(0.95 0.022 125);
 
     /* Primary brand color */
-    --primary: oklch(0.83 0.11 96);
-    --primary-foreground: oklch(0.2 0.02 45);
+    --primary: oklch(0.7 0.13 142);
+    --primary-foreground: oklch(0.2 0.04 145);
 
-    /* Secondary - Muted gold */
-    --secondary: oklch(0.32 0.025 60);
-    --secondary-foreground: oklch(0.9 0.05 80);
+    /* Secondary - subdued evergreen */
+    --secondary: oklch(0.31 0.035 145);
+    --secondary-foreground: oklch(0.9 0.05 125);
 
-    /* Muted - Dark warm gray */
-    --muted: oklch(0.28 0.02 50);
-    --muted-foreground: oklch(0.65 0.015 65);
+    /* Muted - dark leaf gray */
+    --muted: oklch(0.275 0.025 145);
+    --muted-foreground: oklch(0.69 0.03 125);
 
-    /* Accent - Vibrant gold accent */
-    --accent: oklch(0.35 0.035 70);
-    --accent-foreground: oklch(0.88 0.095 85);
+    /* Accent - warm gold keeps important moments visible */
+    --accent: oklch(0.37 0.065 105);
+    --accent-foreground: oklch(0.91 0.075 100);
 
     /* Destructive - Softer red for dark mode */
     --destructive: oklch(0.5 0.2 25);
-    --destructive-foreground: oklch(0.95 0.01 75);
+    --destructive-foreground: oklch(0.95 0.02 125);
 
-    /* Border & Input - Subtle warm borders */
-    --border: oklch(0.32 0.025 55);
-    --input: oklch(0.32 0.025 55);
-    --ring: oklch(0.75 0.135 80);
+    /* Border & Input - restrained sage outlines */
+    --border: oklch(0.34 0.035 145);
+    --input: oklch(0.34 0.035 145);
+    --ring: oklch(0.7 0.13 142);
 
-    /* Chart colors - Vibrant golden palette for dark mode */
-    --chart-1: oklch(0.7 0.125 75); /* Bright gold */
-    --chart-2: oklch(0.65 0.115 85); /* Warm gold */
-    --chart-3: oklch(0.8 0.095 80); /* Light gold */
-    --chart-4: oklch(0.6 0.135 70); /* Deep amber */
-    --chart-5: oklch(0.75 0.105 65); /* Rich bronze */
+    /* Chart colors - bright foliage plus warm harvest gold */
+    --chart-1: oklch(0.72 0.13 142);
+    --chart-2: oklch(0.78 0.12 125);
+    --chart-3: oklch(0.82 0.11 105);
+    --chart-4: oklch(0.72 0.12 85);
+    --chart-5: oklch(0.7 0.08 175);
 
-    /* Sidebar - Dark indigo/violet theme */
-    --sidebar: oklch(0.18 0.035 275); /* deep indigo-slate */
-    --sidebar-foreground: oklch(0.9 0.018 270); /* light lavender text */
-    --sidebar-primary: oklch(0.65 0.2 270); /* bright indigo */
-    --sidebar-primary-foreground: oklch(0.99 0.005 270);
-    --sidebar-accent: oklch(0.28 0.04 270); /* dark indigo hover */
-    --sidebar-accent-foreground: oklch(0.88 0.04 270);
-    --sidebar-border: oklch(0.3 0.04 270); /* indigo border */
-    --sidebar-ring: oklch(0.65 0.2 270);
+    /* Sidebar - deep evergreen navigation */
+    --sidebar: oklch(0.17 0.035 145);
+    --sidebar-foreground: oklch(0.91 0.03 125);
+    --sidebar-primary: oklch(0.7 0.13 142);
+    --sidebar-primary-foreground: oklch(0.2 0.04 145);
+    --sidebar-accent: oklch(0.27 0.045 145);
+    --sidebar-accent-foreground: oklch(0.9 0.045 125);
+    --sidebar-border: oklch(0.31 0.045 145);
+    --sidebar-ring: oklch(0.7 0.13 142);
 }
 
 /* ─── Dashboard background skins ─────────────────────────────── */
 .dashboard-content-bg {
-    /* Light: soft lavender → teal → sky mesh */
+    /* Light: soft sage, fresh leaf and warm harvest mesh */
     background:
         radial-gradient(
             ellipse 90% 70% at 10% 5%,
-            rgba(99, 102, 241, 0.2) 0%,
+            rgba(154, 212, 84, 0.24) 0%,
             transparent 55%
         ),
         radial-gradient(
             ellipse 80% 60% at 88% 85%,
-            rgba(139, 92, 246, 0.16) 0%,
+            rgba(62, 142, 79, 0.16) 0%,
             transparent 55%
         ),
         radial-gradient(
             ellipse 60% 55% at 65% 15%,
-            rgba(20, 184, 166, 0.14) 0%,
+            rgba(230, 180, 92, 0.15) 0%,
             transparent 50%
         ),
         radial-gradient(
             ellipse 50% 50% at 30% 75%,
-            rgba(59, 130, 246, 0.12) 0%,
+            rgba(116, 174, 91, 0.13) 0%,
             transparent 55%
         ),
         linear-gradient(
             135deg,
-            #f5f3ff 0%,
-            #eff6ff 35%,
-            #f0fdf4 65%,
-            #f8fafc 100%
+            #f5f9f0 0%,
+            #eff8e8 35%,
+            #f9f4e6 65%,
+            #f8faf5 100%
         );
 }
 
 .dark .dashboard-content-bg {
-    /* Dark: deep indigo/slate base with vivid violet/teal glows */
+    /* Dark: deep forest base with leaf and harvest glows */
     background:
         radial-gradient(
             ellipse 90% 70% at 10% 5%,
-            rgba(129, 140, 248, 0.22) 0%,
+            rgba(154, 212, 84, 0.2) 0%,
             transparent 55%
         ),
         radial-gradient(
             ellipse 80% 60% at 88% 85%,
-            rgba(167, 139, 250, 0.18) 0%,
+            rgba(62, 142, 79, 0.2) 0%,
             transparent 55%
         ),
         radial-gradient(
             ellipse 60% 55% at 65% 15%,
-            rgba(45, 212, 191, 0.14) 0%,
+            rgba(230, 180, 92, 0.13) 0%,
             transparent 50%
         ),
         radial-gradient(
             ellipse 50% 50% at 30% 75%,
-            rgba(96, 165, 250, 0.12) 0%,
+            rgba(116, 174, 91, 0.13) 0%,
             transparent 55%
         ),
         linear-gradient(
             135deg,
-            #0f172a 0%,
-            #1e1b4b 35%,
-            #0c1a2e 65%,
-            #0f172a 100%
+            #102a1d 0%,
+            #173c28 35%,
+            #112f20 65%,
+            #102a1d 100%
         );
 }
 
@@ -432,13 +528,13 @@
         overflow: hidden;
         background: linear-gradient(
             120deg,
-            rgba(255, 252, 245, 0.75),
-            rgba(255, 243, 220, 0.65),
-            rgba(255, 250, 235, 0.7)
+            rgba(250, 253, 246, 0.78),
+            rgba(232, 246, 216, 0.68),
+            rgba(250, 247, 236, 0.72)
         );
         backdrop-filter: blur(20px);
         box-shadow:
-            0 8px 32px rgba(197, 145, 60, 0.12),
+            0 8px 32px rgba(62, 142, 79, 0.12),
             inset 0 1px 0 rgba(255, 255, 255, 0.6);
     }
 
@@ -451,12 +547,12 @@
         background:
             radial-gradient(
                 circle at 20% 30%,
-                rgba(218, 165, 32, 0.28),
+                rgba(62, 142, 79, 0.24),
                 transparent 55%
             ),
             radial-gradient(
                 circle at 70% 60%,
-                rgba(255, 215, 120, 0.35),
+                rgba(154, 212, 84, 0.3),
                 transparent 60%
             );
         mix-blend-mode: screen;
@@ -471,12 +567,12 @@
         background:
             radial-gradient(
                 circle at 80% 30%,
-                rgba(240, 190, 90, 0.32),
+                rgba(230, 180, 92, 0.28),
                 transparent 60%
             ),
             radial-gradient(
                 circle at 30% 70%,
-                rgba(255, 245, 210, 0.45),
+                rgba(223, 242, 204, 0.42),
                 transparent 65%
             );
         animation-duration: 14s;
@@ -486,13 +582,13 @@
     .dark .mega-glass {
         background: linear-gradient(
             120deg,
-            rgba(25, 22, 18, 0.85),
-            rgba(35, 30, 22, 0.75),
-            rgba(28, 24, 18, 0.8)
+            rgba(16, 42, 29, 0.88),
+            rgba(20, 63, 41, 0.78),
+            rgba(15, 48, 31, 0.84)
         );
         box-shadow:
-            0 8px 32px rgba(218, 165, 32, 0.15),
-            inset 0 1px 0 rgba(255, 215, 120, 0.1);
+            0 8px 32px rgba(154, 212, 84, 0.14),
+            inset 0 1px 0 rgba(223, 242, 204, 0.1);
     }
 
     .dark .mega-glass::before,

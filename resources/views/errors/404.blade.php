@@ -7,7 +7,7 @@
             content="width=device-width, initial-scale=1"
         />
         <title>Page Not Found</title>
-        <link rel="icon" type="image/png" href="{{ asset('assets/img/favi.png') }}" />
+        <link rel="icon" type="image/svg+xml" href="{{ asset('assets/brand/herbs-mark.svg') }}" />
         <style>
             :root {
                 color-scheme: light dark;

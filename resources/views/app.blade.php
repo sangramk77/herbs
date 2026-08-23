@@ -34,8 +34,8 @@
 
     <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
-    <link rel="icon" type="image/png" href="{{ asset('assets/img/favi.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('assets/img/favi.png') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('assets/brand/herbs-mark.svg') }}">
+    <link rel="apple-touch-icon" href="{{ asset('assets/brand/herbs-mark.svg') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
