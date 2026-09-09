@@ -256,13 +256,13 @@ export default function ProductDetail({
                     content={product_details.metaKeyword?.join(', ')}
                 />
                 <meta property="og:type" content="product" />
-                <meta property="og:title" content={metaTitle} />
-                <meta property="og:description" content={metaDescription} />
+                <meta property="og:title" content={product_details.ogTitle || metaTitle} />
+                <meta property="og:description" content={product_details.ogDescription || metaDescription} />
                 <meta property="og:url" content={canonicalUrl} />
                 <meta property="og:image" content={productImageUrl} />
                 <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content={metaTitle} />
-                <meta name="twitter:description" content={metaDescription} />
+                <meta name="twitter:title" content={product_details.twitterTitle || product_details.ogTitle || metaTitle} />
+                <meta name="twitter:description" content={product_details.twitterDescription || product_details.ogDescription || metaDescription} />
                 <meta name="twitter:image" content={productImageUrl} />
                 <link rel="canonical" href={canonicalUrl} />
             </Head>

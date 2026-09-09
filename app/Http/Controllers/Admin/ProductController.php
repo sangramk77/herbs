@@ -6,20 +6,24 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductRequest;
+use App\Jobs\ConvertProductVideoJob;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Unit;
 use App\Services\ImageService;
+use App\Services\ProductVideoService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 final class ProductController extends Controller
 {
     public function __construct(
-        protected ImageService $imageService
+        protected ImageService $imageService,
+        protected ProductVideoService $videoService
     ) {}
 
     /**
@@ -200,6 +204,7 @@ final class ProductController extends Controller
     public function store(ProductRequest $request)
     {
         $data = $request->validated();
+        unset($data['videos']);
 
         // Upload primary image
         if ($request->hasFile('primary_image')) {
@@ -238,7 +243,20 @@ final class ProductController extends Controller
         $this->syncMeasurementUnit($data);
         $data['created_by'] = Auth::guard('admin')->id();
 
-        Product::create($data);
+        $product = Product::create($data);
+
+        if ($request->hasFile('videos')) {
+            $statuses = [];
+            foreach ($request->file('videos') as $slot => $video) {
+                $statusId = (string) Str::uuid();
+                $statuses[] = ['id' => $statusId, 'slot' => $slot, 'source' => $this->videoService->storeTemporary($video, $product->slug, $slot), 'status' => 'queued', 'progress' => 0, 'output' => null];
+            }
+            $product->video_conversion_status = $statuses;
+            $product->save();
+            foreach ($statuses as $status) {
+                ConvertProductVideoJob::dispatch((string) $product->getKey(), $status['id']);
+            }
+        }
 
         return redirect()
             ->route('admin.products.index')

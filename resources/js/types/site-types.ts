@@ -65,6 +65,10 @@ export interface ProductDetail extends Product {
     metaTitle?: string;
     metaDescription?: string;
     metaKeyword?: string[];
+    ogTitle?: string;
+    ogDescription?: string;
+    twitterTitle?: string;
+    twitterDescription?: string;
     stock: number;
     is_in_wishlist: boolean;
     measurement_options?: { value: number; label: string; price: number }[];

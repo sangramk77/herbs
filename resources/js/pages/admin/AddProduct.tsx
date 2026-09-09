@@ -106,6 +106,7 @@ export default function AddProduct({
     errors = EMPTY_ERRORS,
 }: AddProductProps) {
     const [currentStep, setCurrentStep] = useState(1);
+    const [videos, setVideos] = useState<File[]>([]);
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -315,6 +316,7 @@ export default function AddProduct({
                 : null,
             primary_image: data.image1,
             images: [data.image2, data.image3, data.image4].filter(Boolean),
+            videos,
             meta_title: data.metaTitle,
             meta_description: data.metaDescription,
             meta_keywords: tags,
@@ -719,6 +721,31 @@ export default function AddProduct({
                                             )}
                                         />
                                         <div className="grid gap-6 md:grid-cols-[2fr_1fr]">
+                                            <div className="flex flex-col gap-2">
+                                                <FormLabel htmlFor="product-videos">
+                                                    Product videos
+                                                </FormLabel>
+                                                <Input
+                                                    id="product-videos"
+                                                    type="file"
+                                                    accept="video/mp4,video/quicktime,video/webm"
+                                                    multiple
+                                                    onChange={(event) =>
+                                                        setVideos(
+                                                            Array.from(
+                                                                event.target
+                                                                    .files ??
+                                                                    [],
+                                                            ).slice(0, 2),
+                                                        )
+                                                    }
+                                                />
+                                                <FormDescription>
+                                                    Up to two videos; each is
+                                                    converted in the background
+                                                    after saving.
+                                                </FormDescription>
+                                            </div>
                                             <FormField
                                                 control={form.control}
                                                 name="image1"
