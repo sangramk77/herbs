@@ -82,6 +82,7 @@ final class AdminAuthController extends Controller
         $user->updateLastLogin();
 
         $request->session()->regenerate();
+        $request->session()->flash('login_greeting', true);
 
         return redirect()->intended(route('admin.dashboard'));
     }
