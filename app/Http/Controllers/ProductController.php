@@ -439,6 +439,7 @@ final class ProductController extends Controller
                 'metaDescription' => $product->meta_description,
                 'metaKeyword' => $product->meta_keywords,
                 'stock' => $product->stock,
+                'measurement_options' => $product->measurementOptions(),
                 'categoryId' => $product->category_id ? (string) $product->category_id : null,
                 'categoryName' => $currentCategoryName,
                 'categorySlug' => $currentCategorySlug,

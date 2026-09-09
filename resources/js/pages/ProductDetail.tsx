@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import '@/styles/product-lightbox.css';
 import type {
     CartItem,
     NavCategory,
@@ -30,7 +31,6 @@ import type {
     ProductDetail as ProductDetailType,
     Settings,
 } from '@/types/site-types';
-import '@/styles/product-lightbox.css';
 import 'yet-another-react-lightbox/plugins/thumbnails.css';
 import 'yet-another-react-lightbox/styles.css';
 
@@ -78,11 +78,19 @@ export default function ProductDetail({
 
     const [mainImage, setMainImage] = useState(product_details.image1);
     const [selectedQuantity, setSelectedQuantity] = useState(1);
+    const [selectedMeasurement, setSelectedMeasurement] = useState<
+        number | null
+    >(product_details.measurement_options?.[0]?.value ?? null);
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState(0);
     const [isUpdating, setIsUpdating] = useState(false);
 
     const { processing } = useForm({});
+    const selectedMeasurementOption = product_details.measurement_options?.find(
+        (option) => option.value === selectedMeasurement,
+    );
+    const displayedPrice =
+        selectedMeasurementOption?.price ?? product_details.price;
 
     // Detect if this product is already in cart
     const cartItem = cart_items.find(
@@ -192,6 +200,7 @@ export default function ProductDetail({
             {
                 productId: product_details.id,
                 quantity: currentQuantity,
+                measurementValue: selectedMeasurement,
             },
             {
                 preserveScroll: true,
@@ -372,7 +381,10 @@ export default function ProductDetail({
                                     open={lightboxOpen}
                                     close={() => setLightboxOpen(false)}
                                     index={lightboxIndex}
-                                    on={{ view: ({ index }) => setLightboxIndex(index) }}
+                                    on={{
+                                        view: ({ index }) =>
+                                            setLightboxIndex(index),
+                                    }}
                                     plugins={[Thumbnails]}
                                     animation={{
                                         fade: 260,
@@ -430,14 +442,56 @@ export default function ProductDetail({
                                             Out of Stock
                                         </Badge>
                                     )}
+                                    {product_details.measurement_options &&
+                                        product_details.measurement_options
+                                            .length > 0 && (
+                                            <div className="flex flex-col gap-2">
+                                                <label
+                                                    className="text-sm font-medium"
+                                                    htmlFor="measurement"
+                                                >
+                                                    Choose quantity
+                                                </label>
+                                                <select
+                                                    id="measurement"
+                                                    className="h-10 rounded-md border bg-background px-3"
+                                                    value={
+                                                        selectedMeasurement ??
+                                                        ''
+                                                    }
+                                                    onChange={(event) =>
+                                                        setSelectedMeasurement(
+                                                            Number(
+                                                                event.target
+                                                                    .value,
+                                                            ),
+                                                        )
+                                                    }
+                                                >
+                                                    {product_details.measurement_options.map(
+                                                        (option) => (
+                                                            <option
+                                                                key={
+                                                                    option.value
+                                                                }
+                                                                value={
+                                                                    option.value
+                                                                }
+                                                            >
+                                                                {option.label} —
+                                                                ₹{option.price}
+                                                            </option>
+                                                        ),
+                                                    )}
+                                                </select>
+                                            </div>
+                                        )}
                                 </div>
 
                                 <div className="flex items-end gap-3">
                                     <span className="text-3xl font-bold text-primary">
                                         ₹
-                                        {product_details.price.toLocaleString(
-                                            'en-IN',
-                                        )}
+                                        {displayedPrice.toLocaleString('en-IN')}
                                     </span>
                                     {product_details.mrp >
                                         product_details.price && (

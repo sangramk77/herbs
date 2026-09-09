@@ -351,6 +351,22 @@ final class Product extends Model
         return $this->stock > 0;
     }
 
+    /** @return array<int, array{value: float, label: string, price: int}> */
+    public function measurementOptions(): array
+    {
+        if (! $this->measurement_unit_symbol || ! $this->measurement_minimum || ! $this->measurement_maximum || ! $this->measurement_increment) {
+            return [];
+        }
+
+        $options = [];
+        for ($value = (float) $this->measurement_minimum; $value <= (float) $this->measurement_maximum + 0.00001; $value += (float) $this->measurement_increment) {
+            $roundedValue = round($value, 3);
+            $options[] = ['value' => $roundedValue, 'label' => $roundedValue.' '.$this->measurement_unit_symbol, 'price' => (int) ceil(((float) $this->sell_price / (float) $this->measurement_minimum) * $roundedValue)];
+        }
+
+        return $options;
+    }
+
     /**
      * Check if product is active.
      */

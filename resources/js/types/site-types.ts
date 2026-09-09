@@ -67,6 +67,7 @@ export interface ProductDetail extends Product {
     metaKeyword?: string[];
     stock: number;
     is_in_wishlist: boolean;
+    measurement_options?: { value: number; label: string; price: number }[];
 }
 
 export interface CartItem {
