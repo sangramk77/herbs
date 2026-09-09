@@ -91,6 +91,11 @@ export default function ProductDetail({
     );
     const displayedPrice =
         selectedMeasurementOption?.price ?? product_details.price;
+    const displayedMrp = selectedMeasurementOption?.mrp ?? product_details.mrp;
+    const displayedDiscount =
+        displayedMrp && displayedMrp > displayedPrice
+            ? Math.round(((displayedMrp - displayedPrice) / displayedMrp) * 100)
+            : 0;
 
     // Detect if this product is already in cart
     const cartItem = cart_items.find(
@@ -552,19 +557,17 @@ export default function ProductDetail({
                                         ₹
                                         {displayedPrice.toLocaleString('en-IN')}
                                     </span>
-                                    {product_details.mrp >
-                                        product_details.price && (
+                                    {displayedMrp > displayedPrice && (
                                         <div className="flex flex-col text-sm text-muted-foreground">
                                             <span className="line-through">
                                                 ₹
-                                                {product_details.mrp.toLocaleString(
+                                                {displayedMrp.toLocaleString(
                                                     'en-IN',
                                                 )}
                                             </span>
-                                            {product_details.discount && (
+                                            {displayedDiscount > 0 && (
                                                 <span className="font-medium text-green-600">
-                                                    {product_details.discount}%
-                                                    OFF
+                                                    {displayedDiscount}% OFF
                                                 </span>
                                             )}
                                         </div>
