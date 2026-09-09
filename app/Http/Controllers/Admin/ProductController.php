@@ -8,10 +8,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductRequest;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Unit;
 use App\Services\ImageService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -189,6 +190,7 @@ final class ProductController extends Controller
 
         return Inertia::render('admin/AddProduct', [
             'categories' => $categories,
+            'units' => $this->getUnitOptions(),
         ]);
     }
 
@@ -233,6 +235,7 @@ final class ProductController extends Controller
         }
 
         // Set created_by
+        $this->syncMeasurementUnit($data);
         $data['created_by'] = Auth::guard('admin')->id();
 
         Product::create($data);
@@ -264,6 +267,7 @@ final class ProductController extends Controller
         return Inertia::render('admin/EditProduct', [
             'product' => $product,
             'categories' => $categories,
+            'units' => $this->getUnitOptions(),
         ]);
     }
 
@@ -325,6 +329,7 @@ final class ProductController extends Controller
         }
 
         // Set updated_by
+        $this->syncMeasurementUnit($data);
         $data['updated_by'] = Auth::guard('admin')->id();
 
         $product->update($data);
@@ -436,5 +441,33 @@ final class ProductController extends Controller
             ])
             ->values()
             ->all();
+    }
+
+    /** @return array<int, array{id: string, name: string, symbol: string}> */
+    private function getUnitOptions(): array
+    {
+        return Unit::active()->orderBy('sort_order')->orderBy('name')
+            ->get(['name', 'symbol'])
+            ->map(fn (Unit $unit) => ['id' => (string) $unit->getKey(), 'name' => $unit->name, 'symbol' => $unit->symbol])
+            ->values()->all();
+    }
+
+    /** @param array<string, mixed> $data */
+    private function syncMeasurementUnit(array &$data): void
+    {
+        if (empty($data['measurement_unit_id'])) {
+            $data['measurement_unit_id'] = null;
+            $data['measurement_unit_name'] = null;
+            $data['measurement_unit_symbol'] = null;
+            $data['measurement_minimum'] = null;
+            $data['measurement_maximum'] = null;
+            $data['measurement_increment'] = null;
+
+            return;
+        }
+
+        $unit = Unit::findOrFail($data['measurement_unit_id']);
+        $data['measurement_unit_name'] = $unit->name;
+        $data['measurement_unit_symbol'] = $unit->symbol;
     }
 }
