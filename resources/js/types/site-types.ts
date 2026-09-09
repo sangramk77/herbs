@@ -61,6 +61,7 @@ export interface ProductDetail extends Product {
     description: string;
     short_description?: string;
     images: string[];
+    videos?: string[];
     image1Url?: string;
     metaTitle?: string;
     metaDescription?: string;

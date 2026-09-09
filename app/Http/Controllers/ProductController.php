@@ -430,6 +430,10 @@ final class ProductController extends Controller
                 'image1' => $product->primary_image,
                 'image1Url' => $product->primary_image ? asset('uploads/products/'.$product->primary_image) : null,
                 'images' => $images,
+                'videos' => array_values(array_filter(
+                    is_array($product->videos) ? $product->videos : [],
+                    fn (mixed $video): bool => is_string($video) && $video !== ''
+                )),
                 'price' => $product->sell_price,
                 'mrp' => $product->mrp,
                 'discount' => $product->discount_percentage,

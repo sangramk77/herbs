@@ -22,6 +22,8 @@ use MongoDB\Laravel\Eloquent\Model;
  * @property int $discount_percentage
  * @property string|null $primary_image
  * @property array|null $images
+ * @property array|null $videos
+ * @property array|null $video_conversion_status
  * @property string|null $meta_title
  * @property string|null $meta_description
  * @property array|null $meta_keywords
