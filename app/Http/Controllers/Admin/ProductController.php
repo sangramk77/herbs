@@ -296,6 +296,7 @@ final class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
         $data = $request->validated();
+        unset($data['videos']);
 
         // Check if name changed - regenerate slug if needed
         if ($data['name'] !== $product->name) {
@@ -351,6 +352,32 @@ final class ProductController extends Controller
         $data['updated_by'] = Auth::guard('admin')->id();
 
         $product->update($data);
+
+        if ($request->hasFile('videos')) {
+            $statuses = is_array($product->video_conversion_status)
+                ? $product->video_conversion_status
+                : [];
+            $newStatuses = [];
+
+            foreach ($request->file('videos') as $slot => $video) {
+                $statusId = (string) Str::uuid();
+                $newStatuses[] = [
+                    'id' => $statusId,
+                    'slot' => $slot,
+                    'source' => $this->videoService->storeTemporary($video, $product->slug, $slot),
+                    'status' => 'queued',
+                    'progress' => 0,
+                    'output' => null,
+                ];
+            }
+
+            $product->video_conversion_status = [...$statuses, ...$newStatuses];
+            $product->save();
+
+            foreach ($newStatuses as $status) {
+                ConvertProductVideoJob::dispatch((string) $product->getKey(), $status['id']);
+            }
+        }
 
         return redirect()
             ->route('admin.products.index')

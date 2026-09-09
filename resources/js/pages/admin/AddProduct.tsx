@@ -82,6 +82,10 @@ const formSchema = z.object({
         .max(120, 'Meta title must be 120 characters or less')
         .optional(),
     metaDescription: z.string().optional(),
+    ogTitle: z.string().max(120).optional(),
+    ogDescription: z.string().max(160).optional(),
+    twitterTitle: z.string().max(120).optional(),
+    twitterDescription: z.string().max(160).optional(),
     seoUrl: z.string().min(1, 'SEO URL is required'),
     metaKeyword: z.string().optional(),
 });
@@ -131,6 +135,10 @@ export default function AddProduct({
             description_json: null,
             metaTitle: '',
             metaDescription: '',
+            ogTitle: '',
+            ogDescription: '',
+            twitterTitle: '',
+            twitterDescription: '',
             seoUrl: '',
             metaKeyword: '',
         },
@@ -319,6 +327,10 @@ export default function AddProduct({
             videos,
             meta_title: data.metaTitle,
             meta_description: data.metaDescription,
+            og_title: data.ogTitle,
+            og_description: data.ogDescription,
+            twitter_title: data.twitterTitle,
+            twitter_description: data.twitterDescription,
             meta_keywords: tags,
             seo_url: data.seoUrl,
             status: 'active', // Default status
@@ -745,6 +757,17 @@ export default function AddProduct({
                                                     converted in the background
                                                     after saving.
                                                 </FormDescription>
+                                                {videos.length > 0 && (
+                                                    <ul className="space-y-1 text-sm text-muted-foreground">
+                                                        {videos.map((video) => (
+                                                            <li
+                                                                key={`${video.name}-${video.lastModified}`}
+                                                            >
+                                                                {video.name}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
                                             </div>
                                             <FormField
                                                 control={form.control}
@@ -1078,6 +1101,86 @@ export default function AddProduct({
                                                 </FormItem>
                                             )}
                                         />
+
+                                        <div className="grid gap-6 md:grid-cols-2">
+                                            <FormField
+                                                control={form.control}
+                                                name="ogTitle"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>
+                                                            Open Graph title
+                                                        </FormLabel>
+                                                        <FormControl>
+                                                            <Input
+                                                                maxLength={120}
+                                                                placeholder="Defaults to Meta Title"
+                                                                {...field}
+                                                            />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="twitterTitle"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>
+                                                            Twitter title
+                                                        </FormLabel>
+                                                        <FormControl>
+                                                            <Input
+                                                                maxLength={120}
+                                                                placeholder="Defaults to Open Graph title"
+                                                                {...field}
+                                                            />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="ogDescription"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>
+                                                            Open Graph
+                                                            description
+                                                        </FormLabel>
+                                                        <FormControl>
+                                                            <Textarea
+                                                                maxLength={160}
+                                                                placeholder="Defaults to Meta Description"
+                                                                {...field}
+                                                            />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="twitterDescription"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>
+                                                            Twitter description
+                                                        </FormLabel>
+                                                        <FormControl>
+                                                            <Textarea
+                                                                maxLength={160}
+                                                                placeholder="Defaults to Open Graph description"
+                                                                {...field}
+                                                            />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
 
                                         <FormField
                                             control={form.control}

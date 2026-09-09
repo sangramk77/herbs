@@ -189,6 +189,7 @@ export default function ProductDetail({
 
     // De-duplicate just in case
     const uniqueGalleryImages = Array.from(new Set(galleryImages));
+    const productVideos = product_details.videos ?? [];
 
     const handleAddToCart = () => {
         // Ensure we're using the current state value
@@ -256,13 +257,33 @@ export default function ProductDetail({
                     content={product_details.metaKeyword?.join(', ')}
                 />
                 <meta property="og:type" content="product" />
-                <meta property="og:title" content={product_details.ogTitle || metaTitle} />
-                <meta property="og:description" content={product_details.ogDescription || metaDescription} />
+                <meta
+                    property="og:title"
+                    content={product_details.ogTitle || metaTitle}
+                />
+                <meta
+                    property="og:description"
+                    content={product_details.ogDescription || metaDescription}
+                />
                 <meta property="og:url" content={canonicalUrl} />
                 <meta property="og:image" content={productImageUrl} />
                 <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content={product_details.twitterTitle || product_details.ogTitle || metaTitle} />
-                <meta name="twitter:description" content={product_details.twitterDescription || product_details.ogDescription || metaDescription} />
+                <meta
+                    name="twitter:title"
+                    content={
+                        product_details.twitterTitle ||
+                        product_details.ogTitle ||
+                        metaTitle
+                    }
+                />
+                <meta
+                    name="twitter:description"
+                    content={
+                        product_details.twitterDescription ||
+                        product_details.ogDescription ||
+                        metaDescription
+                    }
+                />
                 <meta name="twitter:image" content={productImageUrl} />
                 <link rel="canonical" href={canonicalUrl} />
             </Head>
@@ -431,6 +452,35 @@ export default function ProductDetail({
                                         src: `/uploads/products/${src}`,
                                     }))}
                                 />
+
+                                {productVideos.length > 0 && (
+                                    <section
+                                        className="w-full space-y-3"
+                                        aria-label="Product videos"
+                                    >
+                                        <h3 className="text-sm font-semibold text-gray-800">
+                                            Product videos
+                                        </h3>
+                                        <div className="grid gap-3 sm:grid-cols-2">
+                                            {productVideos.map((video) => (
+                                                <video
+                                                    key={video}
+                                                    className="aspect-video w-full rounded-lg border bg-black"
+                                                    controls
+                                                    preload="metadata"
+                                                    playsInline
+                                                >
+                                                    <source
+                                                        src={`/uploads/products/videos/${video}`}
+                                                        type="video/mp4"
+                                                    />
+                                                    Your browser does not
+                                                    support product videos.
+                                                </video>
+                                            ))}
+                                        </div>
+                                    </section>
+                                )}
                             </div>
 
                             {/* Product Info */}

@@ -58,8 +58,19 @@ interface Product {
     description_json?: object | null;
     meta_title?: string;
     meta_description?: string;
+    og_title?: string;
+    og_description?: string;
+    twitter_title?: string;
+    twitter_description?: string;
     seo_url?: string;
     meta_keywords?: string[];
+    videos?: string[];
+    video_conversion_status?: {
+        id: string;
+        status: 'queued' | 'processing' | 'completed' | 'failed';
+        progress?: number;
+        output?: string | null;
+    }[];
     status?: string;
 }
 
@@ -107,6 +118,10 @@ const formSchema = z.object({
         .max(120, 'Meta title must be 120 characters or less')
         .optional(),
     metaDescription: z.string().optional(),
+    ogTitle: z.string().max(120).optional(),
+    ogDescription: z.string().max(160).optional(),
+    twitterTitle: z.string().max(120).optional(),
+    twitterDescription: z.string().max(160).optional(),
     seoUrl: z.string().optional(), // Optional for edit, will be auto-generated
     metaKeyword: z.string().optional(),
 });
@@ -178,12 +193,17 @@ export default function EditProduct({
             description_json: productForForm.description_json || null,
             metaTitle: productForForm.meta_title || productForForm.name || '',
             metaDescription: productForForm.meta_description || '',
+            ogTitle: productForForm.og_title || '',
+            ogDescription: productForForm.og_description || '',
+            twitterTitle: productForForm.twitter_title || '',
+            twitterDescription: productForForm.twitter_description || '',
             seoUrl: productForForm.slug || productForForm.seo_url || '',
             metaKeyword: productForForm.meta_keywords?.join(', ') || '',
         },
     });
 
     const [tags, setTags] = useState<string[]>([]);
+    const [videos, setVideos] = useState<File[]>([]);
     const [userEditedFields, setUserEditedFields] = useState({
         description: !!productForForm.description,
         metaTitle: !!productForForm.meta_title,
@@ -391,6 +411,10 @@ export default function EditProduct({
                 : null,
             meta_title: data.metaTitle,
             meta_description: data.metaDescription,
+            og_title: data.ogTitle,
+            og_description: data.ogDescription,
+            twitter_title: data.twitterTitle,
+            twitter_description: data.twitterDescription,
             meta_keywords: data.metaKeyword,
             status: 'active', // Required by backend
         };
@@ -414,6 +438,10 @@ export default function EditProduct({
 
         if (newImages.length > 0) {
             formData.images = newImages;
+        }
+
+        if (videos.length > 0) {
+            formData.videos = videos;
         }
 
         // Submit the form using Inertia's router
@@ -882,6 +910,76 @@ export default function EditProduct({
                                                 )}
                                             />
                                         </div>
+                                        <div className="space-y-3 rounded-lg border p-4">
+                                            <FormLabel htmlFor="product-videos">
+                                                Product videos
+                                            </FormLabel>
+                                            <Input
+                                                id="product-videos"
+                                                type="file"
+                                                accept="video/mp4,video/quicktime,video/webm"
+                                                multiple
+                                                onChange={(event) =>
+                                                    setVideos(
+                                                        Array.from(
+                                                            event.target
+                                                                .files ?? [],
+                                                        ).slice(0, 2),
+                                                    )
+                                                }
+                                            />
+                                            <FormDescription>
+                                                Upload up to two additional
+                                                videos. They are converted in
+                                                the background after saving.
+                                            </FormDescription>
+                                            {videos.length > 0 && (
+                                                <ul className="space-y-1 text-sm text-muted-foreground">
+                                                    {videos.map((video) => (
+                                                        <li
+                                                            key={`${video.name}-${video.lastModified}`}
+                                                        >
+                                                            {video.name} — ready
+                                                            to upload
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                            {(productForForm
+                                                .video_conversion_status
+                                                ?.length ?? 0) > 0 && (
+                                                <ul className="space-y-1 text-sm text-muted-foreground">
+                                                    {productForForm.video_conversion_status?.map(
+                                                        (video) => (
+                                                            <li key={video.id}>
+                                                                Video
+                                                                conversion:{' '}
+                                                                {video.status}
+                                                                {video.status ===
+                                                                'processing'
+                                                                    ? ` (${video.progress ?? 0}%)`
+                                                                    : ''}
+                                                                {video.status ===
+                                                                'failed'
+                                                                    ? ' — upload a replacement to retry.'
+                                                                    : ''}
+                                                            </li>
+                                                        ),
+                                                    )}
+                                                </ul>
+                                            )}
+                                            {(productForForm.videos?.length ??
+                                                0) > 0 && (
+                                                <p className="text-sm text-emerald-600">
+                                                    {
+                                                        productForForm.videos
+                                                            ?.length
+                                                    }{' '}
+                                                    video(s) ready for
+                                                    storefront playback.
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
 
                                     {/* Step 2: Additional Images */}
@@ -1233,6 +1331,86 @@ export default function EditProduct({
                                                 </FormItem>
                                             )}
                                         />
+
+                                        <div className="grid gap-6 md:grid-cols-2">
+                                            <FormField
+                                                control={form.control}
+                                                name="ogTitle"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>
+                                                            Open Graph title
+                                                        </FormLabel>
+                                                        <FormControl>
+                                                            <Input
+                                                                maxLength={120}
+                                                                placeholder="Defaults to Meta Title"
+                                                                {...field}
+                                                            />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="twitterTitle"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>
+                                                            Twitter title
+                                                        </FormLabel>
+                                                        <FormControl>
+                                                            <Input
+                                                                maxLength={120}
+                                                                placeholder="Defaults to Open Graph title"
+                                                                {...field}
+                                                            />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="ogDescription"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>
+                                                            Open Graph
+                                                            description
+                                                        </FormLabel>
+                                                        <FormControl>
+                                                            <Textarea
+                                                                maxLength={160}
+                                                                placeholder="Defaults to Meta Description"
+                                                                {...field}
+                                                            />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="twitterDescription"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>
+                                                            Twitter description
+                                                        </FormLabel>
+                                                        <FormControl>
+                                                            <Textarea
+                                                                maxLength={160}
+                                                                placeholder="Defaults to Open Graph description"
+                                                                {...field}
+                                                            />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </CardContent>
