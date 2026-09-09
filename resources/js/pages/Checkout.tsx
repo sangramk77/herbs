@@ -1077,6 +1077,13 @@ export default function Checkout({
                                                         <h4 className="line-clamp-1 text-sm font-medium">
                                                             {item.name}
                                                         </h4>
+                                                        {item.measurement_label && (
+                                                            <p className="text-xs text-muted-foreground">
+                                                                {
+                                                                    item.measurement_label
+                                                                }
+                                                            </p>
+                                                        )}
                                                         <p className="text-xs text-muted-foreground">
                                                             Qty: {item.quantity}{' '}
                                                             × ₹
