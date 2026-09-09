@@ -79,6 +79,8 @@ export interface CartItem {
     slug: string;
     categoryId?: string | null;
     categorySlug?: string | null;
+    measurement_value?: number | null;
+    measurement_label?: string | null;
 }
 
 export interface CartInfo {

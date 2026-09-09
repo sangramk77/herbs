@@ -16,15 +16,22 @@ final class CartController extends Controller
         $request->validate([
             'productId' => 'required',
             'quantity' => 'required|integer|min:1',
+            'measurementValue' => 'nullable|numeric',
         ]);
 
         $productId = (string) $request->productId;
         $quantity = (int) $request->quantity;
+        $measurementValue = $request->filled('measurementValue') ? (float) $request->measurementValue : null;
 
         $product = Product::active()->where('_id', $productId)->first();
 
         if (! $product) {
             return back()->with('error', 'Product not found.');
+        }
+
+        $measurement = $this->measurementOption($product, $measurementValue);
+        if ($product->measurementOptions() !== [] && $measurement === null) {
+            return back()->with('error', 'Please select a valid product quantity.');
         }
 
         $maxOrderableQuantity = $this->getMaxOrderableQuantity($product);
@@ -42,7 +49,7 @@ final class CartController extends Controller
             $categorySlug = $category?->slug;
         }
 
-        $cartKey = $this->resolveCartKey($cart, $productId) ?? $productId;
+        $cartKey = $this->resolveCartKey($cart, $productId, $measurementValue) ?? ($measurementValue === null ? $productId : $productId.'::'.$measurementValue);
 
         if (isset($cart[$cartKey])) {
             if (($cart[$cartKey]['quantity'] + $quantity) > $maxOrderableQuantity) {
@@ -60,12 +67,14 @@ final class CartController extends Controller
             $cart[$productId] = [
                 'id' => $productId,
                 'name' => $product->name,
-                'price' => $product->sell_price,
+                'price' => $measurement['price'] ?? $product->sell_price,
                 'quantity' => $quantity,
                 'image' => $product->primary_image,
                 'slug' => $product->slug,
                 'categorySlug' => $categorySlug,
                 'categoryId' => $product->category_id ? (string) $product->category_id : null,
+                'measurement_value' => $measurement['value'] ?? null,
+                'measurement_label' => $measurement['label'] ?? null,
             ];
         }
 
@@ -147,7 +156,7 @@ final class CartController extends Controller
      *
      * @param  array<array-key, mixed>  $cart
      */
-    private function resolveCartKey(array $cart, string $productId): string|int|null
+    private function resolveCartKey(array $cart, string $productId, ?float $measurementValue = null): string|int|null
     {
         if (array_key_exists($productId, $cart)) {
             return $productId;
@@ -158,8 +167,20 @@ final class CartController extends Controller
                 return $key;
             }
 
-            if (is_array($item) && isset($item['id']) && (string) $item['id'] === $productId) {
+            if (is_array($item) && isset($item['id']) && (string) $item['id'] === $productId && ($item['measurement_value'] ?? null) === $measurementValue) {
                 return $key;
+            }
+        }
+
+        return null;
+    }
+
+    /** @return array{value: float, label: string, price: int}|null */
+    private function measurementOption(Product $product, ?float $value): ?array
+    {
+        foreach ($product->measurementOptions() as $option) {
+            if ($value !== null && abs($option['value'] - $value) < 0.0001) {
+                return $option;
             }
         }
 
