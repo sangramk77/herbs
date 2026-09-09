@@ -106,6 +106,11 @@ export function AdminSidebar({
                     icon: <Section className="h-4 w-4" />,
                     href: '/admin/coupons',
                 },
+                {
+                    label: 'Units',
+                    icon: <Section className="h-4 w-4" />,
+                    href: '/admin/units',
+                },
             ],
         },
         {
