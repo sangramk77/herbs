@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\NewsletterSubscriberController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\UnitController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CmsPageController;
 use App\Http\Controllers\ContactController;
@@ -136,6 +137,10 @@ Route::prefix('admin')->middleware(['auth:admin', 'admin'])->group(function () {
         ->name('admin.products.toggle-featured');
     Route::post('/products/{id}/toggle-stock', [ProductController::class, 'toggleStock'])
         ->name('admin.products.toggle-stock');
+    Route::get('/units', [UnitController::class, 'index'])->name('admin.units.index');
+    Route::post('/units', [UnitController::class, 'store'])->name('admin.units.store');
+    Route::put('/units/{id}', [UnitController::class, 'update'])->name('admin.units.update');
+    Route::delete('/units/{id}', [UnitController::class, 'destroy'])->name('admin.units.destroy');
     Route::get('/best-sellers', [ProductController::class, 'bestSellers'])
         ->name('admin.best-sellers.index');
     Route::put('/best-sellers/{id}/sort-order', [ProductController::class, 'updateBestSellerSortOrder'])

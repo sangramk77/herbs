@@ -67,6 +67,8 @@ final class PaymentController extends Controller
                 'price' => (float) ($item['price'] ?? 0),
                 'quantity' => (int) ($item['quantity'] ?? 1),
                 'image' => $item['image'] ?? null,
+                'measurement_value' => $item['measurement_value'] ?? null,
+                'measurement_label' => $item['measurement_label'] ?? null,
                 'slug' => $item['slug'] ?? null,
                 'categorySlug' => $item['categorySlug'] ?? null,
             ])->values()->all();

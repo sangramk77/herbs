@@ -73,6 +73,49 @@
     font-family: var(--font-display);
 }
 
+@keyframes dashboard-glass-shimmer {
+    from {
+        transform: translateX(-140%) skewX(-18deg);
+    }
+    to {
+        transform: translateX(320%) skewX(-18deg);
+    }
+}
+
+.dashboard-glass-shimmer {
+    width: 42%;
+    height: 150%;
+    top: -25%;
+    left: -45%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgb(255 255 255 / 0.12),
+        rgb(125 211 252 / 0.28),
+        rgb(255 255 255 / 0.1),
+        transparent
+    );
+    filter: blur(14px);
+    animation: dashboard-glass-shimmer 10s ease-in-out infinite;
+}
+
+.dark .dashboard-glass-shimmer {
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgb(56 189 248 / 0.07),
+        rgb(167 139 250 / 0.16),
+        rgb(56 189 248 / 0.07),
+        transparent
+    );
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dashboard-glass-shimmer {
+        animation: none;
+    }
+}
+
 @keyframes frosty-wave {
     0% {
         background-position:

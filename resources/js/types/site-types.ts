@@ -65,8 +65,13 @@ export interface ProductDetail extends Product {
     metaTitle?: string;
     metaDescription?: string;
     metaKeyword?: string[];
+    ogTitle?: string;
+    ogDescription?: string;
+    twitterTitle?: string;
+    twitterDescription?: string;
     stock: number;
     is_in_wishlist: boolean;
+    measurement_options?: { value: number; label: string; price: number }[];
 }
 
 export interface CartItem {
@@ -78,6 +83,8 @@ export interface CartItem {
     slug: string;
     categoryId?: string | null;
     categorySlug?: string | null;
+    measurement_value?: number | null;
+    measurement_label?: string | null;
 }
 
 export interface CartInfo {

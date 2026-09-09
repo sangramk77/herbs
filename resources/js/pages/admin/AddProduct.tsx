@@ -39,6 +39,7 @@ interface Category {
 
 interface AddProductProps {
     categories?: Category[];
+    units?: { id: string; name: string; symbol: string }[];
     auth?: {
         user?: {
             name: string;
@@ -56,6 +57,10 @@ const formSchema = z.object({
     mrp: z.string().min(1, 'MRP is required'),
     sellPrice: z.string().min(1, 'Sell price is required'),
     stock: z.string().min(1, 'Stock quantity is required'),
+    measurementUnitId: z.string().optional(),
+    measurementMinimum: z.string().optional(),
+    measurementMaximum: z.string().optional(),
+    measurementIncrement: z.string().optional(),
     image1: z.union([
         z.string().min(1, 'Main image is required'),
         z.instanceof(File, { message: 'Main image is required' }),
@@ -96,10 +101,12 @@ const EMPTY_ERRORS: Record<string, string> = {};
 
 export default function AddProduct({
     categories = EMPTY_CATEGORIES,
+    units = [],
     auth,
     errors = EMPTY_ERRORS,
 }: AddProductProps) {
     const [currentStep, setCurrentStep] = useState(1);
+    const [videos, setVideos] = useState<File[]>([]);
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -111,6 +118,10 @@ export default function AddProduct({
             mrp: '',
             sellPrice: '',
             stock: '10',
+            measurementUnitId: '',
+            measurementMinimum: '',
+            measurementMaximum: '',
+            measurementIncrement: '',
             image1: '',
             sortOrder: '0',
             image2: '',
@@ -132,7 +143,10 @@ export default function AddProduct({
         metaDescription: false,
     });
     const watchedMrp = useWatch({ control: form.control, name: 'mrp' });
-    const watchedSellPrice = useWatch({ control: form.control, name: 'sellPrice' });
+    const watchedSellPrice = useWatch({
+        control: form.control,
+        name: 'sellPrice',
+    });
     const watchedProductName = useWatch({
         control: form.control,
         name: 'productName',
@@ -185,7 +199,9 @@ export default function AddProduct({
         const sellPrice = parseFloat(watchedSellPrice || '0');
 
         if (mrp > 0 && sellPrice > 0 && sellPrice < mrp) {
-            const discountPercentage = Math.round(((mrp - sellPrice) / mrp) * 100);
+            const discountPercentage = Math.round(
+                ((mrp - sellPrice) / mrp) * 100,
+            );
             form.setValue('discount', discountPercentage.toString());
             return;
         }
@@ -211,7 +227,10 @@ export default function AddProduct({
         }
 
         if (!userEditedFields.metaTitle && productName) {
-            form.setValue('metaTitle', `Buy ${productName} Online | Natural Rudraksh`);
+            form.setValue(
+                'metaTitle',
+                `Buy ${productName} Online | Natural Rudraksh`,
+            );
         }
 
         if (!userEditedFields.metaDescription && productName) {
@@ -285,8 +304,19 @@ export default function AddProduct({
             mrp: data.mrp ? parseFloat(data.mrp) : null,
             discount_percentage: parseFloat(data.discount || '0'),
             stock: data.stock ? parseInt(data.stock) : 0,
+            measurement_unit_id: data.measurementUnitId || null,
+            measurement_minimum: data.measurementUnitId
+                ? Number(data.measurementMinimum)
+                : null,
+            measurement_maximum: data.measurementUnitId
+                ? Number(data.measurementMaximum)
+                : null,
+            measurement_increment: data.measurementUnitId
+                ? Number(data.measurementIncrement)
+                : null,
             primary_image: data.image1,
             images: [data.image2, data.image3, data.image4].filter(Boolean),
+            videos,
             meta_title: data.metaTitle,
             meta_description: data.metaDescription,
             meta_keywords: tags,
@@ -527,6 +557,70 @@ export default function AddProduct({
                                                 </FormItem>
                                             )}
                                         />
+                                        <div className="grid gap-4 md:grid-cols-4">
+                                            <div className="flex flex-col gap-2">
+                                                <FormLabel>Unit</FormLabel>
+                                                <select
+                                                    className="h-9 rounded-md border bg-background px-3"
+                                                    {...form.register(
+                                                        'measurementUnitId',
+                                                    )}
+                                                >
+                                                    <option value="">
+                                                        No measurement selector
+                                                    </option>
+                                                    {units.map((unit) => (
+                                                        <option
+                                                            key={unit.id}
+                                                            value={unit.id}
+                                                        >
+                                                            {unit.name} (
+                                                            {unit.symbol})
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="flex flex-col gap-2">
+                                                <FormLabel>
+                                                    Minimum value
+                                                </FormLabel>
+                                                <Input
+                                                    type="number"
+                                                    min="0"
+                                                    step="any"
+                                                    placeholder="500"
+                                                    {...form.register(
+                                                        'measurementMinimum',
+                                                    )}
+                                                />
+                                            </div>
+                                            <div className="flex flex-col gap-2">
+                                                <FormLabel>
+                                                    Maximum value
+                                                </FormLabel>
+                                                <Input
+                                                    type="number"
+                                                    min="0"
+                                                    step="any"
+                                                    placeholder="1500"
+                                                    {...form.register(
+                                                        'measurementMaximum',
+                                                    )}
+                                                />
+                                            </div>
+                                            <div className="flex flex-col gap-2">
+                                                <FormLabel>Increment</FormLabel>
+                                                <Input
+                                                    type="number"
+                                                    min="0"
+                                                    step="any"
+                                                    placeholder="250"
+                                                    {...form.register(
+                                                        'measurementIncrement',
+                                                    )}
+                                                />
+                                            </div>
+                                        </div>
 
                                         <div className="grid gap-6 md:grid-cols-3">
                                             <FormField
@@ -618,14 +712,40 @@ export default function AddProduct({
                                                         />
                                                     </FormControl>
                                                     <FormDescription className="dark:text-zinc-500">
-                                                        Set exact available units.
-                                                        Use 0 for out of stock.
+                                                        Set exact available
+                                                        units. Use 0 for out of
+                                                        stock.
                                                     </FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
                                         />
                                         <div className="grid gap-6 md:grid-cols-[2fr_1fr]">
+                                            <div className="flex flex-col gap-2">
+                                                <FormLabel htmlFor="product-videos">
+                                                    Product videos
+                                                </FormLabel>
+                                                <Input
+                                                    id="product-videos"
+                                                    type="file"
+                                                    accept="video/mp4,video/quicktime,video/webm"
+                                                    multiple
+                                                    onChange={(event) =>
+                                                        setVideos(
+                                                            Array.from(
+                                                                event.target
+                                                                    .files ??
+                                                                    [],
+                                                            ).slice(0, 2),
+                                                        )
+                                                    }
+                                                />
+                                                <FormDescription>
+                                                    Up to two videos; each is
+                                                    converted in the background
+                                                    after saving.
+                                                </FormDescription>
+                                            </div>
                                             <FormField
                                                 control={form.control}
                                                 name="image1"
@@ -858,9 +978,12 @@ export default function AddProduct({
                                                             placeholder="Enter meta title"
                                                             maxLength={120}
                                                             value={
-                                                                field.value || ''
+                                                                field.value ||
+                                                                ''
                                                             }
-                                                            onChange={(event) => {
+                                                            onChange={(
+                                                                event,
+                                                            ) => {
                                                                 markFieldAsEdited(
                                                                     'metaTitle',
                                                                 );
@@ -906,9 +1029,12 @@ export default function AddProduct({
                                                         <Textarea
                                                             placeholder="Enter meta description"
                                                             value={
-                                                                field.value || ''
+                                                                field.value ||
+                                                                ''
                                                             }
-                                                            onChange={(event) => {
+                                                            onChange={(
+                                                                event,
+                                                            ) => {
                                                                 markFieldAsEdited(
                                                                     'metaDescription',
                                                                 );

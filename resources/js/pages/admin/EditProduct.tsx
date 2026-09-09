@@ -47,6 +47,10 @@ interface Product {
     mrp?: number;
     sell_price?: number;
     stock?: number;
+    measurement_unit_id?: string;
+    measurement_minimum?: number;
+    measurement_maximum?: number;
+    measurement_increment?: number;
     primary_image?: string;
     images?: string[];
     sort_order?: number;
@@ -62,6 +66,7 @@ interface Product {
 interface EditProductProps {
     product: Product;
     categories?: Category[];
+    units?: { id: string; name: string; symbol: string }[];
     auth?: {
         user?: {
             name: string;
@@ -79,6 +84,10 @@ const formSchema = z.object({
     mrp: z.string().min(1, 'MRP is required'),
     sellPrice: z.string().min(1, 'Sell price is required'),
     stock: z.string().min(1, 'Stock quantity is required'),
+    measurementUnitId: z.string().optional(),
+    measurementMinimum: z.string().optional(),
+    measurementMaximum: z.string().optional(),
+    measurementIncrement: z.string().optional(),
     // Allow existing image path (string) or new file upload
     image1: z.union([z.string().optional(), z.instanceof(File)]).optional(),
     sortOrder: z.string().optional(),
@@ -118,6 +127,7 @@ const EMPTY_ERRORS: Record<string, string> = {};
 export default function EditProduct({
     product,
     categories = EMPTY_CATEGORIES,
+    units = [],
     auth,
     errors = EMPTY_ERRORS,
 }: EditProductProps) {
@@ -143,6 +153,13 @@ export default function EditProduct({
                 typeof productForForm.stock === 'number'
                     ? productForForm.stock.toString()
                     : '0',
+            measurementUnitId: productForForm.measurement_unit_id || '',
+            measurementMinimum:
+                productForForm.measurement_minimum?.toString() || '',
+            measurementMaximum:
+                productForForm.measurement_maximum?.toString() || '',
+            measurementIncrement:
+                productForForm.measurement_increment?.toString() || '',
             // Add /uploads/products/ prefix for existing images
             image1: productForForm.primary_image
                 ? `/uploads/products/${productForForm.primary_image}`
@@ -173,7 +190,10 @@ export default function EditProduct({
         metaDescription: !!productForForm.meta_description,
     });
     const watchedMrp = useWatch({ control: form.control, name: 'mrp' });
-    const watchedSellPrice = useWatch({ control: form.control, name: 'sellPrice' });
+    const watchedSellPrice = useWatch({
+        control: form.control,
+        name: 'sellPrice',
+    });
     const watchedProductName = useWatch({
         control: form.control,
         name: 'productName',
@@ -226,7 +246,9 @@ export default function EditProduct({
         const sellPrice = parseFloat(watchedSellPrice || '0');
 
         if (mrp > 0 && sellPrice > 0 && sellPrice < mrp) {
-            const discountPercentage = Math.round(((mrp - sellPrice) / mrp) * 100);
+            const discountPercentage = Math.round(
+                ((mrp - sellPrice) / mrp) * 100,
+            );
             form.setValue('discount', discountPercentage.toString());
             return;
         }
@@ -252,7 +274,10 @@ export default function EditProduct({
         }
 
         if (!userEditedFields.metaTitle && productName) {
-            form.setValue('metaTitle', `Buy ${productName} Online | Natural Rudraksh`);
+            form.setValue(
+                'metaTitle',
+                `Buy ${productName} Online | Natural Rudraksh`,
+            );
         }
 
         if (!userEditedFields.metaDescription && productName) {
@@ -354,13 +379,26 @@ export default function EditProduct({
             mrp: data.mrp ? parseFloat(data.mrp) : null,
             discount_percentage: parseFloat(data.discount || '0'),
             stock: data.stock ? parseInt(data.stock) : 0,
+            measurement_unit_id: data.measurementUnitId || null,
+            measurement_minimum: data.measurementUnitId
+                ? Number(data.measurementMinimum)
+                : null,
+            measurement_maximum: data.measurementUnitId
+                ? Number(data.measurementMaximum)
+                : null,
+            measurement_increment: data.measurementUnitId
+                ? Number(data.measurementIncrement)
+                : null,
             meta_title: data.metaTitle,
             meta_description: data.metaDescription,
             meta_keywords: data.metaKeyword,
             status: 'active', // Required by backend
         };
 
-        if (data.sortOrder && !Number.isNaN(Number.parseInt(data.sortOrder, 10))) {
+        if (
+            data.sortOrder &&
+            !Number.isNaN(Number.parseInt(data.sortOrder, 10))
+        ) {
             formData.sort_order = Number.parseInt(data.sortOrder, 10);
         }
 
@@ -625,6 +663,70 @@ export default function EditProduct({
                                                 </FormItem>
                                             )}
                                         />
+                                        <div className="grid gap-4 md:grid-cols-4">
+                                            <div className="flex flex-col gap-2">
+                                                <FormLabel>Unit</FormLabel>
+                                                <select
+                                                    className="h-9 rounded-md border bg-background px-3"
+                                                    {...form.register(
+                                                        'measurementUnitId',
+                                                    )}
+                                                >
+                                                    <option value="">
+                                                        No measurement selector
+                                                    </option>
+                                                    {units.map((unit) => (
+                                                        <option
+                                                            key={unit.id}
+                                                            value={unit.id}
+                                                        >
+                                                            {unit.name} (
+                                                            {unit.symbol})
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="flex flex-col gap-2">
+                                                <FormLabel>
+                                                    Minimum value
+                                                </FormLabel>
+                                                <Input
+                                                    type="number"
+                                                    min="0"
+                                                    step="any"
+                                                    placeholder="500"
+                                                    {...form.register(
+                                                        'measurementMinimum',
+                                                    )}
+                                                />
+                                            </div>
+                                            <div className="flex flex-col gap-2">
+                                                <FormLabel>
+                                                    Maximum value
+                                                </FormLabel>
+                                                <Input
+                                                    type="number"
+                                                    min="0"
+                                                    step="any"
+                                                    placeholder="1500"
+                                                    {...form.register(
+                                                        'measurementMaximum',
+                                                    )}
+                                                />
+                                            </div>
+                                            <div className="flex flex-col gap-2">
+                                                <FormLabel>Increment</FormLabel>
+                                                <Input
+                                                    type="number"
+                                                    min="0"
+                                                    step="any"
+                                                    placeholder="250"
+                                                    {...form.register(
+                                                        'measurementIncrement',
+                                                    )}
+                                                />
+                                            </div>
+                                        </div>
 
                                         <div className="grid gap-6 md:grid-cols-3">
                                             <FormField
@@ -714,8 +816,9 @@ export default function EditProduct({
                                                             />
                                                         </FormControl>
                                                         <FormDescription className="dark:text-zinc-500">
-                                                            Set exact available units.
-                                                            Use 0 for out of stock.
+                                                            Set exact available
+                                                            units. Use 0 for out
+                                                            of stock.
                                                         </FormDescription>
                                                         <FormMessage />
                                                     </FormItem>
@@ -959,9 +1062,12 @@ export default function EditProduct({
                                                             placeholder="Enter meta title"
                                                             maxLength={120}
                                                             value={
-                                                                field.value || ''
+                                                                field.value ||
+                                                                ''
                                                             }
-                                                            onChange={(event) => {
+                                                            onChange={(
+                                                                event,
+                                                            ) => {
                                                                 markFieldAsEdited(
                                                                     'metaTitle',
                                                                 );
@@ -1007,9 +1113,12 @@ export default function EditProduct({
                                                         <Textarea
                                                             placeholder="Enter meta description"
                                                             value={
-                                                                field.value || ''
+                                                                field.value ||
+                                                                ''
                                                             }
-                                                            onChange={(event) => {
+                                                            onChange={(
+                                                                event,
+                                                            ) => {
                                                                 markFieldAsEdited(
                                                                     'metaDescription',
                                                                 );

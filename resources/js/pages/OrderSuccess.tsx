@@ -15,6 +15,7 @@ interface OrderItem {
     quantity: number;
     price: number;
     image?: string | null;
+    measurement_label?: string | null;
 }
 
 interface OrderSuccessProps {
@@ -139,6 +140,11 @@ export default function OrderSuccess({
                                                 <p className="font-semibold">
                                                     {item.name}
                                                 </p>
+                                                {item.measurement_label && (
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {item.measurement_label}
+                                                    </p>
+                                                )}
                                                 <p className="font-semibold">
                                                     ₹
                                                     {(

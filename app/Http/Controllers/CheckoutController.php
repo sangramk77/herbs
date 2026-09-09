@@ -129,6 +129,8 @@ final class CheckoutController extends Controller
             'image' => $item['image'] ?? null,
             'slug' => $item['slug'] ?? null,
             'categorySlug' => $item['categorySlug'] ?? null,
+            'measurement_value' => $item['measurement_value'] ?? null,
+            'measurement_label' => $item['measurement_label'] ?? null,
         ])->values();
 
         $shippingAddress = [

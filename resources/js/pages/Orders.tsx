@@ -36,6 +36,7 @@ interface OrderItem {
     quantity: number;
     price: number;
     image?: string | null;
+    measurement_label?: string | null;
 }
 
 interface Order {
@@ -429,6 +430,11 @@ export default function Orders({ orders }: OrdersProps) {
                                                 <p className="truncate text-sm font-medium text-foreground">
                                                     {item.name}
                                                 </p>
+                                                {item.measurement_label && (
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {item.measurement_label}
+                                                    </p>
+                                                )}
                                                 <p className="text-xs text-muted-foreground">
                                                     Qty: {item.quantity}
                                                 </p>
