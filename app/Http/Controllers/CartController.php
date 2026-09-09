@@ -89,12 +89,14 @@ final class CartController extends Controller
         $request->validate([
             'productId' => 'required',
             'action' => 'required|in:increase,decrease',
+            'measurementValue' => 'nullable|numeric',
         ]);
 
         $productId = (string) $request->productId;
         $action = $request->action;
+        $measurementValue = $request->filled('measurementValue') ? (float) $request->measurementValue : null;
         $cart = Session::get('cart', []);
-        $cartKey = $this->resolveCartKey($cart, $productId);
+        $cartKey = $this->resolveCartKey($cart, $productId, $measurementValue);
 
         if ($cartKey !== null && isset($cart[$cartKey])) {
             $product = Product::active()->where('_id', $productId)->first();
@@ -128,12 +130,14 @@ final class CartController extends Controller
         $request->validate([
             'productId' => 'required',
             'redirectWhenEmpty' => 'sometimes|boolean',
+            'measurementValue' => 'nullable|numeric',
         ]);
 
         $productId = (string) $request->productId;
         $redirectWhenEmpty = (bool) $request->boolean('redirectWhenEmpty');
+        $measurementValue = $request->filled('measurementValue') ? (float) $request->measurementValue : null;
         $cart = Session::get('cart', []);
-        $cartKey = $this->resolveCartKey($cart, $productId);
+        $cartKey = $this->resolveCartKey($cart, $productId, $measurementValue);
 
         if ($cartKey !== null && isset($cart[$cartKey])) {
             unset($cart[$cartKey]);
