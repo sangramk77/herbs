@@ -14,8 +14,8 @@ use MongoDB\Laravel\Eloquent\Model;
 /**
  * @property string $_id
  * @property string $name
- * @property string $email
- * @property string $password
+ * @property string|null $email
+ * @property string|null $password
  * @property string|null $avatar
  * @property string $role
  * @property string|null $created_by
@@ -25,6 +25,7 @@ use MongoDB\Laravel\Eloquent\Model;
  * @property bool $is_active
  * @property \Carbon\Carbon|null $last_login_at
  * @property \Carbon\Carbon|null $email_verified_at
+ * @property \Carbon\Carbon|null $phone_verified_at
  * @property \Carbon\Carbon|null $created_at
  * @property \Carbon\Carbon|null $updated_at
  * @property string|null $remember_token
@@ -72,6 +73,7 @@ final class User extends Authenticatable
         'permissions',
         'is_active',
         'last_login_at',
+        'phone_verified_at',
     ];
 
     /**
@@ -233,6 +235,7 @@ final class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
             'last_login_at' => 'datetime',

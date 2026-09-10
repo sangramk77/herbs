@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\UnitController;
+use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CmsPageController;
 use App\Http\Controllers\ContactController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\WishlistController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -40,6 +42,20 @@ Route::post('/forgot-password', [App\Http\Controllers\Auth\PasswordResetLinkCont
 Route::get('/password/token-expired', fn () => Inertia::render('auth/token-expired'))
     ->middleware('guest')
     ->name('password.token-expired');
+
+Route::prefix('auth/otp')->middleware('guest')->group(function () {
+    Route::post('/send', [OtpController::class, 'send'])->name('auth.otp.send');
+    Route::post('/verify', [OtpController::class, 'verify'])->name('auth.otp.verify');
+    Route::post('/resend', [OtpController::class, 'resend'])->name('auth.otp.resend');
+});
+
+Route::get('/register', function (Request $request) {
+    $redirect = $request->query('redirect');
+
+    return redirect()->route('login', is_string($redirect) && str_starts_with($redirect, '/') && ! str_starts_with($redirect, '//')
+        ? ['redirect' => $redirect]
+        : []);
+})->middleware('guest')->name('register');
 
 // Home page route
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

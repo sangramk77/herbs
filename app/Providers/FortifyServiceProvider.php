@@ -8,8 +8,6 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -55,19 +53,7 @@ final class FortifyServiceProvider extends ServiceProvider
      */
     private function configureAuthentication(): void
     {
-        Fortify::authenticateUsing(function (Request $request) {
-            $user = Auth::getProvider()->retrieveByCredentials(
-                $request->only(Fortify::username(), 'password')
-            );
-
-            if ($user && Hash::check($request->input('password'), $user->getAuthPassword())) {
-                $request->session()->put('show_confetti_login', true);
-
-                return $user;
-            }
-
-            return null;
-        });
+        Fortify::authenticateUsing(fn () => null);
     }
 
     /**
