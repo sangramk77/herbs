@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { AlertCircle, Edit, Plus, Search, Trash2, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,8 @@ interface Category {
     name: string;
     slug: string;
     description?: string;
+    image?: string | null;
+    image_url?: string | null;
     status: 'active' | 'inactive';
     products_count: number;
     sort_order: number;
@@ -58,6 +60,7 @@ export default function Categories({
 }: CategoriesProps) {
     const { errors } = usePage().props as any;
     const [search, setSearch] = useState(filters.search || '');
+    const hasInitializedSearch = useRef(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(
@@ -67,6 +70,11 @@ export default function Categories({
 
     // Dynamic search with debouncing
     useEffect(() => {
+        if (!hasInitializedSearch.current) {
+            hasInitializedSearch.current = true;
+            return;
+        }
+
         const timeoutId = setTimeout(() => {
             router.get('/admin/categories', search ? { search } : {}, {
                 preserveState: true,
@@ -201,6 +209,7 @@ export default function Categories({
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead>Image</TableHead>
                                 <TableHead>Name</TableHead>
                                 <TableHead>Slug</TableHead>
                                 <TableHead>Products</TableHead>
@@ -215,7 +224,7 @@ export default function Categories({
                             {categories.data.length === 0 ? (
                                 <TableRow>
                                     <TableCell
-                                        colSpan={6}
+                                        colSpan={7}
                                         className="text-center"
                                     >
                                         No categories found
@@ -224,6 +233,19 @@ export default function Categories({
                             ) : (
                                 categories.data.map((category) => (
                                     <TableRow key={category.id}>
+                                        <TableCell>
+                                            {category.image_url ? (
+                                                <img
+                                                    src={category.image_url}
+                                                    alt={category.name}
+                                                    className="h-12 w-12 rounded-md object-cover"
+                                                />
+                                            ) : (
+                                                <div className="flex h-12 w-12 items-center justify-center rounded-md bg-zinc-100 text-xs text-zinc-400 dark:bg-zinc-800">
+                                                    None
+                                                </div>
+                                            )}
+                                        </TableCell>
                                         <TableCell className="font-medium">
                                             {category.name}
                                         </TableCell>

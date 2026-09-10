@@ -103,6 +103,10 @@ final class ProductController extends Controller
                 'name' => $category->name,
                 'slug' => $category->slug,
                 'description' => $category->description,
+                'banner_url' => $category->banner
+                    ? asset('uploads/categories/banners/'.$category->banner)
+                    : null,
+                'show_banner' => $category->show_banner !== false,
             ],
             'products' => $products,
             'cart_count' => $cartCount,

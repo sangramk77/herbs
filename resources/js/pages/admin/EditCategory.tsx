@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, router } from '@inertiajs/react';
 import { AlertCircle, ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
@@ -23,6 +24,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import AdminLayout from '@/layouts/AdminLayout';
 
@@ -32,6 +34,10 @@ const formSchema = z.object({
     status: z.enum(['active', 'inactive']),
     sort_order: z.string().optional(),
     image: z.any().optional(),
+    video: z.any().optional(),
+    banner: z.any().optional(),
+    show_video: z.boolean(),
+    show_banner: z.boolean(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -44,6 +50,11 @@ interface Category {
     status: 'active' | 'inactive';
     sort_order: number;
     products_count: number;
+    image_url?: string | null;
+    video_url?: string | null;
+    banner_url?: string | null;
+    show_video: boolean;
+    show_banner: boolean;
 }
 
 interface EditCategoryProps {
@@ -70,8 +81,13 @@ export default function EditCategory({
             description: category.description || '',
             status: category.status,
             sort_order: category.sort_order.toString(),
+            show_video: category.show_video,
+            show_banner: category.show_banner,
         },
     });
+    const [removeImage, setRemoveImage] = useState(false);
+    const [removeVideo, setRemoveVideo] = useState(false);
+    const [removeBanner, setRemoveBanner] = useState(false);
 
     const onSubmit = (data: FormValues) => {
         const formData = new FormData();
@@ -82,6 +98,15 @@ export default function EditCategory({
         if (data.image && data.image[0]) {
             formData.append('image', data.image[0]);
         }
+        if (data.video && data.video[0])
+            formData.append('video', data.video[0]);
+        if (data.banner && data.banner[0])
+            formData.append('banner', data.banner[0]);
+        formData.append('show_video', data.show_video ? '1' : '0');
+        formData.append('show_banner', data.show_banner ? '1' : '0');
+        if (removeImage) formData.append('remove_image', '1');
+        if (removeVideo) formData.append('remove_video', '1');
+        if (removeBanner) formData.append('remove_banner', '1');
         formData.append('_method', 'PUT');
 
         router.post(`/admin/categories/${category.id}`, formData, {
@@ -297,6 +322,146 @@ export default function EditCategory({
                                     </FormItem>
                                 )}
                             />
+
+                            {category.image_url && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() =>
+                                        setRemoveImage((value) => !value)
+                                    }
+                                >
+                                    {removeImage
+                                        ? 'Keep Current Image'
+                                        : 'Remove Current Image'}
+                                </Button>
+                            )}
+                            <FormField
+                                control={form.control}
+                                name="show_video"
+                                render={({ field }) => (
+                                    <FormItem className="flex items-center justify-between rounded-lg border p-4 dark:border-zinc-700">
+                                        <div>
+                                            <FormLabel>
+                                                Show category video
+                                            </FormLabel>
+                                            <FormDescription>
+                                                Display the optional category
+                                                video.
+                                            </FormDescription>
+                                        </div>
+                                        <FormControl>
+                                            <Switch
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="video"
+                                render={({ field: { onChange, ...field } }) => (
+                                    <FormItem>
+                                        <FormLabel>Category Video</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="file"
+                                                accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm"
+                                                onChange={(event) => {
+                                                    setRemoveVideo(false);
+                                                    onChange(
+                                                        event.target.files,
+                                                    );
+                                                }}
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormDescription>
+                                            Upload a replacement video (max
+                                            100MB).
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            {category.video_url && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() =>
+                                        setRemoveVideo((value) => !value)
+                                    }
+                                >
+                                    {removeVideo
+                                        ? 'Keep Current Video'
+                                        : 'Remove Current Video'}
+                                </Button>
+                            )}
+                            <FormField
+                                control={form.control}
+                                name="show_banner"
+                                render={({ field }) => (
+                                    <FormItem className="flex items-center justify-between rounded-lg border p-4 dark:border-zinc-700">
+                                        <div>
+                                            <FormLabel>
+                                                Show category banner
+                                            </FormLabel>
+                                            <FormDescription>
+                                                Display this category's banner
+                                                above its products.
+                                            </FormDescription>
+                                        </div>
+                                        <FormControl>
+                                            <Switch
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="banner"
+                                render={({ field: { onChange, ...field } }) => (
+                                    <FormItem>
+                                        <FormLabel>Category Banner</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp"
+                                                onChange={(event) => {
+                                                    setRemoveBanner(false);
+                                                    onChange(
+                                                        event.target.files,
+                                                    );
+                                                }}
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormDescription>
+                                            Upload a replacement banner (max
+                                            5MB).
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            {category.banner_url && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() =>
+                                        setRemoveBanner((value) => !value)
+                                    }
+                                >
+                                    {removeBanner
+                                        ? 'Keep Current Banner'
+                                        : 'Remove Current Banner'}
+                                </Button>
+                            )}
 
                             <div className="flex justify-end gap-4">
                                 <Button

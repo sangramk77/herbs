@@ -13,6 +13,10 @@ use MongoDB\Laravel\Eloquent\Model;
  * @property string $slug
  * @property string|null $description
  * @property string|null $image
+ * @property string|null $video
+ * @property string|null $banner
+ * @property bool $show_video
+ * @property bool $show_banner
  * @property string $status
  * @property int $sort_order
  * @property string|null $created_by
@@ -50,6 +54,10 @@ final class Category extends Model
         'slug',
         'description',
         'image',
+        'video',
+        'banner',
+        'show_video',
+        'show_banner',
         'status',
         'sort_order',
         'created_by',
@@ -64,6 +72,8 @@ final class Category extends Model
     protected $attributes = [
         'status' => 'active',
         'sort_order' => 0,
+        'show_video' => false,
+        'show_banner' => true,
     ];
 
     /**
@@ -157,6 +167,8 @@ final class Category extends Model
         return [
             'status' => 'string',
             'sort_order' => 'integer',
+            'show_video' => 'boolean',
+            'show_banner' => 'boolean',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
             'deleted_at' => 'datetime',

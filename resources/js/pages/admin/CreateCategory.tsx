@@ -23,6 +23,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import AdminLayout from '@/layouts/AdminLayout';
 
@@ -32,6 +33,10 @@ const formSchema = z.object({
     status: z.enum(['active', 'inactive']),
     sort_order: z.string().optional(),
     image: z.any().optional(),
+    video: z.any().optional(),
+    banner: z.any().optional(),
+    show_video: z.boolean(),
+    show_banner: z.boolean(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -55,6 +60,8 @@ export default function CreateCategory({ auth, errors }: CreateCategoryProps) {
             description: '',
             status: 'active',
             sort_order: '0',
+            show_video: false,
+            show_banner: true,
         },
     });
 
@@ -67,6 +74,12 @@ export default function CreateCategory({ auth, errors }: CreateCategoryProps) {
         if (data.image && data.image[0]) {
             formData.append('image', data.image[0]);
         }
+        if (data.video && data.video[0])
+            formData.append('video', data.video[0]);
+        if (data.banner && data.banner[0])
+            formData.append('banner', data.banner[0]);
+        formData.append('show_video', data.show_video ? '1' : '0');
+        formData.append('show_banner', data.show_banner ? '1' : '0');
 
         router.post('/admin/categories', formData, {
             onSuccess: () => {
@@ -255,6 +268,101 @@ export default function CreateCategory({ auth, errors }: CreateCategoryProps) {
                                         <FormDescription className="dark:text-zinc-500">
                                             Optional category image (JPG, PNG,
                                             WebP, max 2MB)
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="show_video"
+                                render={({ field }) => (
+                                    <FormItem className="flex items-center justify-between rounded-lg border p-4 dark:border-zinc-700">
+                                        <div>
+                                            <FormLabel>
+                                                Show category video
+                                            </FormLabel>
+                                            <FormDescription>
+                                                Display the optional category
+                                                video.
+                                            </FormDescription>
+                                        </div>
+                                        <FormControl>
+                                            <Switch
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="video"
+                                render={({ field: { onChange, ...field } }) => (
+                                    <FormItem>
+                                        <FormLabel>Category Video</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="file"
+                                                accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm"
+                                                onChange={(event) =>
+                                                    onChange(event.target.files)
+                                                }
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormDescription>
+                                            Optional MP4, MOV, AVI, MKV, or WebM
+                                            video (max 100MB).
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="show_banner"
+                                render={({ field }) => (
+                                    <FormItem className="flex items-center justify-between rounded-lg border p-4 dark:border-zinc-700">
+                                        <div>
+                                            <FormLabel>
+                                                Show category banner
+                                            </FormLabel>
+                                            <FormDescription>
+                                                Display this category's banner
+                                                above its products.
+                                            </FormDescription>
+                                        </div>
+                                        <FormControl>
+                                            <Switch
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="banner"
+                                render={({ field: { onChange, ...field } }) => (
+                                    <FormItem>
+                                        <FormLabel>Category Banner</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp"
+                                                onChange={(event) =>
+                                                    onChange(event.target.files)
+                                                }
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormDescription>
+                                            Optional JPG, PNG, or WebP banner
+                                            (max 5MB).
                                         </FormDescription>
                                         <FormMessage />
                                     </FormItem>
