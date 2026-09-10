@@ -152,6 +152,9 @@ Route::prefix('admin')->middleware(['auth:admin', 'admin'])->group(function () {
         ->name('admin.products.store');
     Route::get('/products/{id}/edit', [ProductController::class, 'edit'])
         ->name('admin.products.edit');
+    Route::get('/products/{id}/video-status', [ProductController::class, 'videoStatus'])->name('admin.products.video-status');
+    Route::post('/products/{id}/videos/upload', [ProductController::class, 'uploadVideo'])->name('admin.products.videos.upload');
+    Route::delete('/products/{id}/videos', [ProductController::class, 'deleteVideo'])->name('admin.products.videos.delete');
     Route::put('/products/{id}', [ProductController::class, 'update'])
         ->name('admin.products.update');
     Route::delete('/products/{id}', [ProductController::class, 'destroy'])

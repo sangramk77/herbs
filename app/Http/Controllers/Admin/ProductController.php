@@ -459,6 +459,59 @@ final class ProductController extends Controller
         return back();
     }
 
+    public function videoStatus(string $id): JsonResponse
+    {
+        $product = Product::findOrFail($id);
+
+        return response()->json([
+            'videos' => array_values(is_array($product->videos) ? $product->videos : []),
+            'video_conversion_status' => array_values(is_array($product->video_conversion_status) ? $product->video_conversion_status : []),
+        ]);
+    }
+
+    public function uploadVideo(Request $request, string $id): JsonResponse
+    {
+        $product = Product::findOrFail($id);
+        $request->validate(['video' => ['required', 'file', 'mimetypes:video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm', 'max:102400']]);
+        $videos = array_values(is_array($product->videos) ? $product->videos : []);
+        $statuses = array_values(is_array($product->video_conversion_status) ? $product->video_conversion_status : []);
+        $pending = collect($statuses)->whereIn('status', ['queued', 'processing'])->count();
+        if (count($videos) + $pending >= 2) {
+            return response()->json(['message' => 'Maximum 2 videos are allowed per product.'], 422);
+        }
+
+        $video = $request->file('video');
+        $status = ['id' => (string) Str::uuid(), 'slot' => count($videos) + $pending, 'source' => $this->videoService->storeTemporary($video, (string) $product->slug, count($videos) + $pending), 'output' => null, 'status' => 'queued', 'progress' => 0, 'error' => null];
+        $statuses[] = $status;
+        $product->video_conversion_status = $statuses;
+        $product->updated_by = Auth::guard('admin')->id();
+        $product->save();
+        ConvertProductVideoJob::dispatch((string) $product->getKey(), $status['id']);
+
+        return response()->json(['message' => 'Video uploaded. Conversion started.', 'videos' => $videos, 'video_conversion_status' => $statuses]);
+    }
+
+    public function deleteVideo(Request $request, string $id): JsonResponse
+    {
+        $product = Product::findOrFail($id);
+        $index = (int) $request->input('index', -1);
+        $videos = array_values(is_array($product->videos) ? $product->videos : []);
+        if (! isset($videos[$index])) {
+            return response()->json(['message' => 'Invalid video index.'], 422);
+        }
+        $removedVideo = $videos[$index];
+        $path = public_path('uploads/products/videos/'.$removedVideo);
+        if (is_file($path)) {
+            unlink($path);
+        }
+        array_splice($videos, $index, 1);
+        $product->videos = $videos;
+        $product->video_conversion_status = array_values(array_filter(is_array($product->video_conversion_status) ? $product->video_conversion_status : [], fn (mixed $status): bool => ($status['output'] ?? null) !== $removedVideo));
+        $product->save();
+
+        return response()->json(['videos' => $product->videos, 'video_conversion_status' => $product->video_conversion_status]);
+    }
+
     /**
      * Toggle product featured/best seller status.
      */
