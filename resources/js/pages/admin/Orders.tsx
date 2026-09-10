@@ -592,15 +592,22 @@ export default function Orders({ auth, orders = [] }: OrdersProps) {
                             >
                                 View Details
                             </DropdownMenuItem>
-                            {status === 'Order Accepted' && (
-                                <DropdownMenuItem
-                                    onClick={() => openBillUploadModal(item)}
-                                >
-                                    {item.billUrl
-                                        ? 'Replace Bill'
-                                        : 'Upload Bill'}
-                                </DropdownMenuItem>
-                            )}
+                            {status === 'Order Accepted' &&
+                                (item.billUrl ? (
+                                    <DropdownMenuItem
+                                        onClick={() => openBillViewer(item)}
+                                    >
+                                        View Bill
+                                    </DropdownMenuItem>
+                                ) : (
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            openBillUploadModal(item)
+                                        }
+                                    >
+                                        Upload Bill
+                                    </DropdownMenuItem>
+                                ))}
                             {status === 'Order Accepted' && (
                                 <DropdownMenuItem
                                     onClick={() =>
@@ -628,14 +635,13 @@ export default function Orders({ auth, orders = [] }: OrdersProps) {
                                     Mark as Delivered
                                 </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem
-                                disabled={!item.billUrl}
-                                onClick={() => openBillViewer(item)}
-                            >
-                                {item.billUrl
-                                    ? 'View Bill'
-                                    : 'View Bill (upload first)'}
-                            </DropdownMenuItem>
+                            {status !== 'Order Accepted' && item.billUrl && (
+                                <DropdownMenuItem
+                                    onClick={() => openBillViewer(item)}
+                                >
+                                    View Bill
+                                </DropdownMenuItem>
+                            )}
                         </DropdownMenuContent>
                     </DropdownMenu>
                 );
@@ -1265,8 +1271,8 @@ export default function Orders({ auth, orders = [] }: OrdersProps) {
                             Preview, print, or download the bill PDF.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4 dark:border-zinc-800">
-                        <div className="min-w-0">
+                    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-5 py-4 dark:border-zinc-800">
+                        <div className="min-w-0 flex-1">
                             <h3 className="truncate text-lg font-semibold text-foreground dark:text-white">
                                 Bill PDF
                                 {billViewOrder?.orderId
@@ -1277,10 +1283,11 @@ export default function Orders({ auth, orders = [] }: OrdersProps) {
                                 PDF preview
                             </p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
                             <Button
                                 variant="outline"
                                 size="sm"
+                                className="shrink-0"
                                 disabled={!billViewOrder?.billUrl}
                                 onClick={() => {
                                     const win =
@@ -1305,7 +1312,12 @@ export default function Orders({ auth, orders = [] }: OrdersProps) {
                                 Print
                             </Button>
                             {billViewOrder?.billUrl && (
-                                <Button variant="outline" size="sm" asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="shrink-0"
+                                    asChild
+                                >
                                     <a
                                         href={billViewOrder.billUrl}
                                         target="_blank"
@@ -1315,8 +1327,23 @@ export default function Orders({ auth, orders = [] }: OrdersProps) {
                                     </a>
                                 </Button>
                             )}
+                            {billViewOrder && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="shrink-0"
+                                    onClick={() => {
+                                        const order = billViewOrder;
+                                        setBillViewOpen(false);
+                                        openBillUploadModal(order);
+                                    }}
+                                >
+                                    Replace Bill
+                                </Button>
+                            )}
                             <Button
                                 size="sm"
+                                className="shrink-0"
                                 onClick={() => setBillViewOpen(false)}
                             >
                                 Close

@@ -10,6 +10,8 @@ use App\Models\CouponUsage;
 use App\Models\OnlinePayment;
 use App\Models\Order;
 use App\Services\CouponService;
+use App\Services\ProductPurchaseService;
+use App\Services\PurchaseUnavailableException;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,6 +25,7 @@ final class PaymentController extends Controller
 
     public function __construct(
         private readonly CouponService $couponService,
+        private readonly ProductPurchaseService $productPurchaseService,
     ) {
         $this->razorpay = new Api(
             config('razorpay.key_id'),
@@ -37,6 +40,8 @@ final class PaymentController extends Controller
     {
         try {
             $validated = $request->validate([
+                'customerName' => ['required', 'string', 'max:100'],
+                'customerEmail' => ['nullable', 'email', 'max:255'],
                 'address' => ['required', 'string', 'max:255'],
                 'city' => ['required', 'string', 'max:100'],
                 'state' => ['required', 'string', 'max:100'],
@@ -51,6 +56,14 @@ final class PaymentController extends Controller
                 ], 400);
             }
 
+            try {
+                $purchase = $this->productPurchaseService->revalidateCart($cart);
+            } catch (PurchaseUnavailableException $e) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            }
+            $cart = $purchase['cart'];
+            Session::put('cart', $cart);
+
             $cartSubtotal = $this->couponService->cartSubtotal($cart);
             $couponData = $this->couponService->resolveSessionCoupon(
                 $cart,
@@ -61,17 +74,7 @@ final class PaymentController extends Controller
             $deliveryCharge = 0.0; // Online payment has free delivery.
             $finalAmount = max(0, $cartSubtotal - $discountAmount + $deliveryCharge);
 
-            $items = collect($cart)->map(fn (array $item) => [
-                'id' => $item['id'] ?? null,
-                'name' => $item['name'] ?? 'N/A',
-                'price' => (float) ($item['price'] ?? 0),
-                'quantity' => (int) ($item['quantity'] ?? 1),
-                'image' => $item['image'] ?? null,
-                'measurement_value' => $item['measurement_value'] ?? null,
-                'measurement_label' => $item['measurement_label'] ?? null,
-                'slug' => $item['slug'] ?? null,
-                'categorySlug' => $item['categorySlug'] ?? null,
-            ])->values()->all();
+            $items = $purchase['items'];
 
             $shippingAddress = [
                 'line1' => $validated['address'],
@@ -91,6 +94,7 @@ final class PaymentController extends Controller
                     'city' => $validated['city'],
                     'state' => $validated['state'],
                     'pincode' => $validated['pincode'],
+                    'customer_name' => $validated['customerName'],
                     'user_id' => (string) $request->user()->id,
                 ],
             ]);
@@ -114,8 +118,8 @@ final class PaymentController extends Controller
             OnlinePayment::create([
                 'razorpay_order_id' => $razorpayOrder->id,
                 'user_id' => (string) $request->user()->id,
-                'customer_name' => $request->user()->name,
-                'customer_email' => $request->user()->email,
+                'customer_name' => $validated['customerName'],
+                'customer_email' => $validated['customerEmail'] ?? null,
                 'customer_phone' => $request->user()->phone ?? null,
                 'shipping_address' => $shippingAddress,
                 'total_price' => $finalAmount,
@@ -198,6 +202,15 @@ final class PaymentController extends Controller
                 'success' => false,
                 'message' => 'Payment verification failed. Please contact support.',
             ], 400);
+        } catch (PurchaseUnavailableException $e) {
+            Log::critical('Verified payment requires manual inventory resolution', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment was received but an item is no longer available. Please contact support.',
+            ], 409);
         } catch (Exception $e) {
             Log::error('Payment verification error: '.$e->getMessage());
 
@@ -249,13 +262,26 @@ final class PaymentController extends Controller
                 'razorpay_payment_id' => $razorpayPaymentId,
             ]);
 
-            $order = $this->finalizePaidOrder(
-                $razorpayOrderId,
-                $razorpayPaymentId,
-                null,
-                'webhook',
-                $eventData,
-            );
+            try {
+                $order = $this->finalizePaidOrder(
+                    $razorpayOrderId,
+                    $razorpayPaymentId,
+                    null,
+                    'webhook',
+                    $eventData,
+                );
+            } catch (PurchaseUnavailableException $e) {
+                Log::critical('Webhook payment requires manual inventory resolution', [
+                    'razorpay_order_id' => $razorpayOrderId,
+                    'razorpay_payment_id' => $razorpayPaymentId,
+                    'message' => $e->getMessage(),
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Payment requires inventory review.',
+                ]);
+            }
 
             if (! $order) {
                 Log::warning('Webhook could not finalize order: pending record not found', [
@@ -283,7 +309,7 @@ final class PaymentController extends Controller
 
             if ($razorpayOrderId !== '') {
                 $pending = OnlinePayment::where('razorpay_order_id', $razorpayOrderId)->first();
-                if ($pending) {
+                if ($pending && ! in_array($pending->status, ['processing', 'completed', 'inventory_unavailable'], true)) {
                     $pending->status = 'failed';
                     $pending->payment_status = 'failed';
                     if ($razorpayPaymentId !== '') {
@@ -319,7 +345,7 @@ final class PaymentController extends Controller
             $pending = OnlinePayment::where('razorpay_order_id', $razorpayOrderId)->first();
             if ($pending) {
                 // Don't update if webhook has already processed this payment
-                if ($pending->processed_at !== null) {
+                if ($pending->processed_at !== null || in_array($pending->status, ['processing', 'completed', 'inventory_unavailable'], true)) {
                     Log::info('Payment already processed by webhook, skipping failure update', [
                         'razorpay_order_id' => $razorpayOrderId,
                         'status' => $pending->status,
@@ -379,46 +405,62 @@ final class PaymentController extends Controller
             return $existingOrder;
         }
 
-        // Use pessimistic locking to prevent race conditions
-        // This ensures only one request (webhook OR verify) creates the order
-        $pending = OnlinePayment::where('razorpay_order_id', $razorpayOrderId)
-            ->lockForUpdate()
-            ->first();
-
-        if (! $pending) {
-            Log::warning('No pending online payment found for order finalization', [
-                'razorpay_order_id' => $razorpayOrderId,
-                'razorpay_payment_id' => $razorpayPaymentId,
-                'source' => $source,
-            ]);
+        // MongoDB does not provide SQL row locks. Atomically claim the payment
+        // so browser verification and the webhook cannot both create an order.
+        $pending = OnlinePayment::where('razorpay_order_id', $razorpayOrderId)->first();
+        $previousStatus = $pending?->status;
+        $claimed = OnlinePayment::where('razorpay_order_id', $razorpayOrderId)
+            ->whereIn('status', ['pending', 'user_cancelled', 'cancelled', 'failed'])
+            ->update(['status' => 'processing', 'processing_started_at' => now()]);
+        if ($claimed !== 1) {
+            $pending = OnlinePayment::where('razorpay_order_id', $razorpayOrderId)->first();
+            if ($pending?->order_id) {
+                return Order::where('order_id', $pending->order_id)->first();
+            }
+            Log::info('Payment finalization is already being handled or requires manual review', ['razorpay_order_id' => $razorpayOrderId, 'status' => $pending?->status]);
 
             return null;
         }
-
-        // Check again if already processed (after acquiring lock)
-        // Another concurrent request might have processed it
-        if ($pending->processed_at !== null && $pending->order_id) {
-            Log::info('Payment already processed by concurrent request', [
-                'razorpay_order_id' => $razorpayOrderId,
-                'razorpay_payment_id' => $razorpayPaymentId,
-                'source' => $source,
-                'existing_order_id' => $pending->order_id,
-            ]);
-
-            return Order::where('order_id', $pending->order_id)->first();
+        $pending = OnlinePayment::where('razorpay_order_id', $razorpayOrderId)->first();
+        if (! $pending) {
+            return null;
         }
 
         // Log if we're recovering from a cancelled state (user closed modal after payment)
-        if (in_array($pending->status, ['user_cancelled', 'cancelled', 'failed'], true)) {
+        if (in_array($previousStatus, ['user_cancelled', 'cancelled', 'failed'], true)) {
             Log::info('Recovering payment from cancelled/failed state', [
                 'razorpay_order_id' => $razorpayOrderId,
                 'razorpay_payment_id' => $razorpayPaymentId,
-                'previous_status' => $pending->status,
+                'previous_status' => $previousStatus,
                 'source' => $source,
-                'recovery_scenario' => $pending->status === 'user_cancelled'
+                'recovery_scenario' => $previousStatus === 'user_cancelled'
                     ? 'User closed modal after payment succeeded'
                     : 'Payment failed then succeeded',
             ]);
+        }
+
+        $pendingCart = collect($pending->items ?? [])->map(fn (array $item) => [
+            'id' => $item['product_id'] ?? $item['id'] ?? null,
+            'quantity' => (int) ($item['quantity'] ?? 0),
+            'measurement_value' => $item['measurement_value'] ?? null,
+            'categorySlug' => $item['categorySlug'] ?? null,
+        ])->all();
+        try {
+            $purchase = $this->productPurchaseService->revalidateCart($pendingCart);
+            $this->productPurchaseService->decrementInventory($purchase['inventory']);
+        } catch (PurchaseUnavailableException $e) {
+            $pending->status = 'inventory_unavailable';
+            $pending->payment_status = 'paid_inventory_unavailable';
+            $pending->razorpay_payment_id = $razorpayPaymentId;
+            $pending->inventory_error = $e->getMessage();
+            $pending->processed_at = now();
+            $pending->save();
+            Log::critical('Paid payment requires manual inventory resolution', [
+                'razorpay_order_id' => $razorpayOrderId,
+                'razorpay_payment_id' => $razorpayPaymentId,
+                'message' => $e->getMessage(),
+            ]);
+            throw $e;
         }
 
         $items = collect($pending->items ?? [])->map(fn (array $item) => [
@@ -429,28 +471,37 @@ final class PaymentController extends Controller
             'image' => $item['image'] ?? null,
             'slug' => $item['slug'] ?? null,
             'categorySlug' => $item['categorySlug'] ?? null,
+            'measurement_value' => $item['measurement_value'] ?? null,
+            'measurement_label' => $item['measurement_label'] ?? null,
         ])->values();
 
-        $order = Order::create([
-            'user_id' => $pending->user_id,
-            'customer_name' => $pending->customer_name,
-            'customer_email' => $pending->customer_email,
-            'customer_phone' => $pending->customer_phone,
-            'shipping_address' => $pending->shipping_address,
-            'total_price' => (float) $pending->total_price,
-            'subtotal_price' => (float) ($pending->subtotal_price ?? $pending->total_price),
-            'coupon_code' => $pending->coupon_code,
-            'coupon_id' => $pending->coupon_id,
-            'discount_amount' => (float) ($pending->discount_amount ?? 0),
-            'delivery_charge' => (float) ($pending->delivery_charge ?? 0),
-            'status' => 'Order Placed',
-            'payment_method' => 'ONLINE',
-            'payment_status' => 'completed',
-            'razorpay_order_id' => $razorpayOrderId,
-            'razorpay_payment_id' => $razorpayPaymentId,
-            'razorpay_signature' => $razorpaySignature,
-            'items' => $items,
-        ]);
+        try {
+            $order = Order::create([
+                'user_id' => $pending->user_id,
+                'customer_name' => $pending->customer_name,
+                'customer_email' => $pending->customer_email,
+                'customer_phone' => $pending->customer_phone,
+                'shipping_address' => $pending->shipping_address,
+                'total_price' => (float) $pending->total_price,
+                'subtotal_price' => (float) ($pending->subtotal_price ?? $pending->total_price),
+                'coupon_code' => $pending->coupon_code,
+                'coupon_id' => $pending->coupon_id,
+                'discount_amount' => (float) ($pending->discount_amount ?? 0),
+                'delivery_charge' => (float) ($pending->delivery_charge ?? 0),
+                'status' => 'Order Placed',
+                'payment_method' => 'ONLINE',
+                'payment_status' => 'completed',
+                'razorpay_order_id' => $razorpayOrderId,
+                'razorpay_payment_id' => $razorpayPaymentId,
+                'razorpay_signature' => $razorpaySignature,
+                'items' => $items,
+            ]);
+        } catch (Exception $e) {
+            foreach ($purchase['inventory'] as $requirement) {
+                $this->productPurchaseService->restoreInventory($requirement['product_id'], $requirement['quantity']);
+            }
+            throw $e;
+        }
 
         if ($pending->coupon_id) {
             $usageExists = CouponUsage::where('order_id', (string) $order->order_id)->exists();

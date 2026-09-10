@@ -11,6 +11,8 @@ interface CategoryProductsProps {
         name: string;
         slug: string;
         description?: string | null;
+        banner_url?: string | null;
+        show_banner: boolean;
     };
     products: Product[];
     cart_count: number;
@@ -69,7 +71,19 @@ export default function CategoryProductsPage({
         >
             <Head title={category.name} />
 
-            <section className="py-12 md:py-16">
+            {category.show_banner && category.banner_url && (
+                <section className="bg-white px-4 pt-4 sm:px-6 lg:px-8">
+                    <div className="mx-auto max-w-[92rem] overflow-hidden rounded-2xl">
+                        <img
+                            src={category.banner_url}
+                            alt="Category offer banner"
+                            className="h-[17rem] w-full object-cover sm:h-[21rem] md:h-[26rem]"
+                        />
+                    </div>
+                </section>
+            )}
+
+            <section className="pt-4 pb-12 md:pt-6 md:pb-16">
                 <div className="container mx-auto px-4">
                     <div className="rounded-3xl border border-amber-100 bg-gradient-to-br from-amber-50 via-white to-rose-50 p-6 shadow-sm md:p-8">
                         <div className="mb-6 text-center">

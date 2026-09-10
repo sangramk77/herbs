@@ -20,14 +20,11 @@ interface SearchBarProps {
 }
 
 const ALGOLIA_APP_ID = import.meta.env.VITE_ALGOLIA_APP_ID as
-    | string
-    | undefined;
+    string | undefined;
 const ALGOLIA_SEARCH_KEY = import.meta.env.VITE_ALGOLIA_SEARCH_KEY as
-    | string
-    | undefined;
+    string | undefined;
 const ALGOLIA_INDEX_NAME = import.meta.env.VITE_ALGOLIA_INDEX_NAME as
-    | string
-    | undefined;
+    string | undefined;
 
 function useClickOutside(handler: () => void) {
     const ref = useRef<HTMLDivElement | null>(null);
@@ -195,11 +192,23 @@ export function SearchBar({
 
     if (!searchClient || !ALGOLIA_INDEX_NAME) {
         return (
-            <form className={`relative ${className}`}>
+            <form
+                className={`relative ${className}`}
+                onSubmit={(event) => {
+                    event.preventDefault();
+                    const query = new FormData(event.currentTarget).get('q');
+                    if (typeof query === 'string' && query.trim() !== '') {
+                        window.location.assign(
+                            `/search?q=${encodeURIComponent(query.trim())}`,
+                        );
+                    }
+                }}
+            >
                 <div className="relative">
                     <Search className="absolute top-1/2 left-4 h-4.5 w-4.5 -translate-y-1/2 text-muted-foreground" />
                     <Input
                         type="text"
+                        name="q"
                         placeholder={placeholder}
                         className="h-11 rounded-2xl border border-primary/40 bg-white/95 pr-4 pl-11 text-sm shadow-md transition-all duration-200 focus-visible:border-primary focus-visible:shadow-lg focus-visible:ring-1 focus-visible:ring-primary/30"
                     />

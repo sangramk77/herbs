@@ -28,7 +28,9 @@ use MongoDB\Laravel\Eloquent\Model;
  * @property string $payment_status
  * @property array $items
  * @property array|null $webhook_payload
+ * @property \Carbon\Carbon|null $processing_started_at
  * @property \Carbon\Carbon|null $processed_at
+ * @property string|null $inventory_error
  * @property \Carbon\Carbon|null $created_at
  * @property \Carbon\Carbon|null $updated_at
  */
@@ -59,7 +61,9 @@ final class OnlinePayment extends Model
         'payment_status',
         'items',
         'webhook_payload',
+        'processing_started_at',
         'processed_at',
+        'inventory_error',
     ];
 
     protected $casts = [
@@ -70,6 +74,7 @@ final class OnlinePayment extends Model
         'delivery_charge' => 'decimal:2',
         'items' => 'array',
         'webhook_payload' => 'array',
+        'processing_started_at' => 'datetime',
         'processed_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

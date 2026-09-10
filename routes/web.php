@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\AboutController;
+use App\Http\Controllers\Admin\AboutController as AdminAboutController;
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminManagementController;
 use App\Http\Controllers\Admin\BannerController;
@@ -16,6 +18,7 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\UnitController;
+use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CmsPageController;
 use App\Http\Controllers\ContactController;
@@ -24,8 +27,10 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PincodeController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\WishlistController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -39,11 +44,30 @@ Route::get('/password/token-expired', fn () => Inertia::render('auth/token-expir
     ->middleware('guest')
     ->name('password.token-expired');
 
+Route::prefix('auth/otp')->middleware('guest')->group(function () {
+    Route::post('/send', [OtpController::class, 'send'])->name('auth.otp.send');
+    Route::post('/verify', [OtpController::class, 'verify'])->name('auth.otp.verify');
+    Route::post('/resend', [OtpController::class, 'resend'])->name('auth.otp.resend');
+});
+Route::post('/auth/otp/profile', [OtpController::class, 'completeProfile'])->middleware('auth')->name('auth.otp.profile');
+
+Route::get('/register', function (Request $request) {
+    $redirect = $request->query('redirect');
+
+    return redirect()->route('login', is_string($redirect) && str_starts_with($redirect, '/') && ! str_starts_with($redirect, '//')
+        ? ['redirect' => $redirect]
+        : []);
+})->middleware('guest')->name('register');
+
 // Home page route
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
+Route::get('/about', [AboutController::class, 'index'])->name('about');
+
 // Product Detail Route
 Route::get('/product', [App\Http\Controllers\ProductController::class, 'index'])->name('product.index');
+Route::get('/search', [App\Http\Controllers\ProductController::class, 'search'])->name('product.search');
+Route::get('/api/pincode/{pincode}', [PincodeController::class, 'show'])->whereNumber('pincode')->name('api.pincode.show');
 Route::get('/popular-products', [App\Http\Controllers\ProductController::class, 'popular'])->name('popular-products');
 Route::get('/category/{categorySlug}', [App\Http\Controllers\ProductController::class, 'category'])->name('category.show');
 Route::get('/category/{categorySlug}/product/{slug}', [App\Http\Controllers\ProductController::class, 'showByCategory'])->name('product.show.category');
@@ -123,10 +147,15 @@ Route::prefix('admin')->middleware(['auth:admin', 'admin'])->group(function () {
         ->name('admin.products.index');
     Route::get('/products/create', [ProductController::class, 'create'])
         ->name('admin.products.create');
+    Route::post('/products/quick-create', [ProductController::class, 'quickCreate'])
+        ->name('admin.products.quick-create');
     Route::post('/products', [ProductController::class, 'store'])
         ->name('admin.products.store');
     Route::get('/products/{id}/edit', [ProductController::class, 'edit'])
         ->name('admin.products.edit');
+    Route::get('/products/{id}/video-status', [ProductController::class, 'videoStatus'])->name('admin.products.video-status');
+    Route::post('/products/{id}/videos/upload', [ProductController::class, 'uploadVideo'])->name('admin.products.videos.upload');
+    Route::delete('/products/{id}/videos', [ProductController::class, 'deleteVideo'])->name('admin.products.videos.delete');
     Route::put('/products/{id}', [ProductController::class, 'update'])
         ->name('admin.products.update');
     Route::delete('/products/{id}', [ProductController::class, 'destroy'])
@@ -201,11 +230,34 @@ Route::prefix('admin')->middleware(['auth:admin', 'admin'])->group(function () {
         Route::post('/settings/general', [App\Http\Controllers\Admin\SettingController::class, 'updateGeneral'])->name('admin.system.settings.general');
         Route::post('/settings/counter', [App\Http\Controllers\Admin\SettingController::class, 'updateCounter'])->name('admin.system.settings.counter');
         Route::post('/settings/social-media', [App\Http\Controllers\Admin\SettingController::class, 'updateSocialMedia'])->name('admin.system.settings.social-media');
+        Route::post('/settings/seo', [App\Http\Controllers\Admin\SettingController::class, 'updateSeo'])->name('admin.system.settings.seo');
         Route::post('/settings/scripts', [App\Http\Controllers\Admin\SettingController::class, 'updateScripts'])->name('admin.system.settings.scripts');
+        Route::post('/settings/ads-txt', [App\Http\Controllers\Admin\SettingController::class, 'updateAdsTxt'])->name('admin.system.settings.ads-txt');
+        Route::post('/settings/ticker', [App\Http\Controllers\Admin\SettingController::class, 'updateTicker'])->name('admin.system.settings.ticker');
+        Route::delete('/settings/ticker', [App\Http\Controllers\Admin\SettingController::class, 'deleteTicker'])->name('admin.system.settings.ticker.delete');
+        Route::post('/settings/verification-files', [App\Http\Controllers\Admin\SettingController::class, 'uploadVerificationFile'])->name('admin.system.settings.verification-files');
+        Route::delete('/settings/verification-files', [App\Http\Controllers\Admin\SettingController::class, 'deleteVerificationFile'])->name('admin.system.settings.verification-files.delete');
+        Route::post('/settings/trust-features', [App\Http\Controllers\Admin\SettingController::class, 'uploadTrustFeature'])->name('admin.system.settings.trust-features');
+        Route::post('/settings/trust-features/{id}', [App\Http\Controllers\Admin\SettingController::class, 'updateTrustFeature'])->name('admin.system.settings.trust-features.update');
+        Route::delete('/settings/trust-features', [App\Http\Controllers\Admin\SettingController::class, 'deleteTrustFeature'])->name('admin.system.settings.trust-features.delete');
+        Route::post('/settings/default-videos', [App\Http\Controllers\Admin\SettingController::class, 'updateDefaultVideos'])->name('admin.system.settings.default-videos');
+        Route::delete('/settings/default-videos', [App\Http\Controllers\Admin\SettingController::class, 'deleteDefaultVideo'])->name('admin.system.settings.default-videos.delete');
     });
 
     // CMS Routes
     Route::prefix('cms')->group(function () {
+        Route::get('/about', [AdminAboutController::class, 'index'])->name('admin.cms.about');
+        Route::post('/about/content', [AdminAboutController::class, 'updateAbout'])->name('admin.cms.about.content');
+        Route::delete('/about/image', [AdminAboutController::class, 'deleteAboutImage'])->name('admin.cms.about.image.delete');
+        Route::post('/about/mission-vision', [AdminAboutController::class, 'updateMissionVision'])->name('admin.cms.about.mission-vision');
+        Route::post('/about/credentials', [AdminAboutController::class, 'updateCredentials'])->name('admin.cms.about.credentials');
+        Route::post('/about/gallery', [AdminAboutController::class, 'addGalleryImage'])->name('admin.cms.about.gallery.add');
+        Route::post('/about/gallery/update', [AdminAboutController::class, 'updateGalleryImage'])->name('admin.cms.about.gallery.update');
+        Route::delete('/about/gallery', [AdminAboutController::class, 'deleteGalleryImage'])->name('admin.cms.about.gallery.delete');
+        Route::post('/about/videos', [AdminAboutController::class, 'addVideo'])->name('admin.cms.about.videos.add');
+        Route::delete('/about/videos', [AdminAboutController::class, 'deleteVideo'])->name('admin.cms.about.videos.delete');
+        Route::post('/about/experience', [AdminAboutController::class, 'updateExperience'])->name('admin.cms.about.experience');
+
         Route::get('/pages', [AdminCmsPageController::class, 'index'])->name('admin.cms.pages');
         Route::get('/pages/add', fn () => Inertia::render('admin/cms/AddPage'))->name('admin.cms.pages.add');
         Route::post('/pages', [AdminCmsPageController::class, 'store'])->name('admin.cms.pages.store');

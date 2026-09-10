@@ -1,9 +1,30 @@
 import { Link } from '@inertiajs/react';
 
+interface TickerBarProps {
+    text?: string | null;
+    enabled?: boolean;
+}
+
 interface TopBarProps {
     message: string;
     linkText: string;
     linkUrl: string;
+}
+
+export function TickerBar({ text, enabled = false }: TickerBarProps) {
+    const tickerText = text?.trim();
+
+    if (!enabled || !tickerText) {
+        return null;
+    }
+
+    return (
+        <div className="overflow-hidden border-b border-[#3e8e4f]/15 bg-[#173c28] py-2 text-center text-[11px] tracking-[0.08em] text-[#dcefd1] uppercase">
+            <div className="ticker-track whitespace-nowrap">
+                <span className="px-8">{tickerText}</span>
+            </div>
+        </div>
+    );
 }
 
 export function TopBar({ message, linkText, linkUrl }: TopBarProps) {

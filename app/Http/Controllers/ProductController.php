@@ -8,7 +8,9 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Services\SettingsService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -27,6 +29,55 @@ final class ProductController extends Controller
 
         return redirect()->route('category.show', [
             'categorySlug' => $firstCategory->slug,
+        ]);
+    }
+
+    /** Display active products matching a public search query. */
+    public function search(Request $request): Response
+    {
+        $query = mb_trim((string) $request->query('q', ''));
+        $products = collect();
+
+        if ($query !== '') {
+            $products = Product::search($query)->get()->filter(
+                fn (Product $product): bool => $product->isActive(),
+            );
+        }
+
+        $categories = Category::active()->get(['_id', 'name', 'slug'])->keyBy(
+            fn (Category $category): string => (string) $category->getKey(),
+        );
+        $results = $products->map(function (Product $product) use ($categories): array {
+            $category = $product->category_id ? $categories->get((string) $product->category_id) : null;
+
+            return [
+                'id' => (string) $product->getKey(),
+                'productsName' => $product->name,
+                'seoUrl' => $product->slug,
+                'image1' => $product->primary_image,
+                'price' => (float) ($product->sell_price ?? 0),
+                'mrp' => $product->mrp !== null ? (float) $product->mrp : 0,
+                'discount' => $product->discount_percentage,
+                'categoryId' => $product->category_id ? (string) $product->category_id : null,
+                'categoryName' => $category?->name,
+                'categorySlug' => $category?->slug,
+            ];
+        })->values();
+
+        $cart = session()->get('cart', []);
+        $wishlist = session()->get('wishlist', []);
+
+        return Inertia::render('SearchResults', [
+            'settings' => (object) SettingsService::getSettingsData(),
+            'query' => $query,
+            'products' => $results,
+            'cart_count' => array_sum(array_column($cart, 'quantity')),
+            'cart_price' => array_sum(array_map(fn (array $item): float => (float) $item['price'] * (int) $item['quantity'], $cart)),
+            'cart_items' => array_values($cart),
+            'wishlist_count' => count($wishlist),
+            'wishlist_items' => [],
+            'wishlist_ids' => $wishlist,
+            'auth' => ['user' => Auth::user()],
         ]);
     }
 
@@ -103,6 +154,10 @@ final class ProductController extends Controller
                 'name' => $category->name,
                 'slug' => $category->slug,
                 'description' => $category->description,
+                'banner_url' => $category->banner
+                    ? asset('uploads/categories/banners/'.$category->banner)
+                    : null,
+                'show_banner' => $category->show_banner !== false,
             ],
             'products' => $products,
             'cart_count' => $cartCount,
@@ -415,6 +470,8 @@ final class ProductController extends Controller
             ])->toArray();
         }
 
+        $seo = $this->buildProductSeo($product, $currentCategorySlug);
+
         return Inertia::render('ProductDetail', [
             'settings' => (object) SettingsService::getSettingsData(),
             'cart_count' => $cartCount,
@@ -453,6 +510,7 @@ final class ProductController extends Controller
                 'categorySlug' => $currentCategorySlug,
                 'is_in_wishlist' => in_array($product->_id, session()->get('wishlist', [])),
             ],
+            'seo' => $seo,
             'related_product' => $relatedProducts,
             'popular_product' => $popularProducts,
             'featured_product' => $featuredProducts,
@@ -461,5 +519,67 @@ final class ProductController extends Controller
                 'user' => Auth::user(),
             ],
         ]);
+    }
+
+    /**
+     * Build product metadata with per-product fields taking priority over
+     * the global SEO defaults configured in the admin settings.
+     *
+     * @return array<string, string|null>
+     */
+    private function buildProductSeo(Product $product, ?string $categorySlug): array
+    {
+        $path = $categorySlug
+            ? '/category/'.$categorySlug.'/product/'.$product->slug
+            : '/product/'.$product->slug;
+        $settings = SettingsService::getSettingsData();
+
+        $description = $product->og_description
+            ?: $product->meta_description
+            ?: $settings['globalOgDescription']
+            ?: $settings['globalMetaDescription']
+            ?: $product->short_description
+            ?: $product->description
+            ?: 'Shop '.$product->name.' at '.$settings['site_name'].'.';
+        $description = mb_trim(preg_replace('/\s+/', ' ', strip_tags((string) $description)) ?: '');
+
+        $twitterDescription = $product->twitter_description
+            ?: $settings['globalTwitterDescription']
+            ?: $description;
+        $twitterDescription = mb_trim(preg_replace('/\s+/', ' ', strip_tags((string) $twitterDescription)) ?: '');
+
+        $imageUrl = $product->primary_image
+            ? asset('uploads/products/'.$product->primary_image)
+            : ($settings['globalOgImageUrl'] ?: asset('assets/img/favi.png'));
+        $twitterImageUrl = $product->primary_image
+            ? $imageUrl
+            : ($settings['globalTwitterImageUrl'] ?: $imageUrl);
+
+        return [
+            'title' => $product->og_title
+                ?: $product->meta_title
+                ?: $settings['globalOgTitle']
+                ?: $settings['globalMetaTitle']
+                ?: $product->name,
+            'description' => Str::limit($description, 160, ''),
+            'twitterTitle' => $product->twitter_title
+                ?: $product->og_title
+                ?: $product->meta_title
+                ?: $settings['globalTwitterTitle']
+                ?: $settings['globalOgTitle']
+                ?: $settings['globalMetaTitle']
+                ?: $product->name,
+            'twitterDescription' => Str::limit($twitterDescription, 160, ''),
+            'keywords' => is_array($product->meta_keywords)
+                ? implode(', ', $product->meta_keywords)
+                : $settings['globalMetaKeywords'],
+            'canonicalUrl' => url($path),
+            'imageUrl' => $imageUrl,
+            'twitterImageUrl' => $twitterImageUrl,
+            'imageWidth' => $product->primary_image ? null : (string) $settings['globalOgImageWidth'],
+            'imageHeight' => $product->primary_image ? null : (string) $settings['globalOgImageHeight'],
+            'imageAlt' => $product->name,
+            'type' => 'product',
+        ];
     }
 }

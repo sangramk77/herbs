@@ -42,6 +42,24 @@ export interface Settings {
     cod_charge: number;
     headerScripts?: string;
     footerScripts?: string;
+    default_video_1?: string | null;
+    default_video_2?: string | null;
+    homepageVideo?: string | null;
+    categoryVideo?: string | null;
+    trustFeatures?: { id: string; image_url: string }[];
+    tickerText?: string | null;
+    tickerEnabled?: boolean;
+    globalMetaTitle?: string | null;
+    globalMetaDescription?: string | null;
+    globalMetaKeywords?: string | null;
+    globalOgTitle?: string | null;
+    globalOgDescription?: string | null;
+    globalOgImageUrl?: string | null;
+    globalTwitterTitle?: string | null;
+    globalTwitterDescription?: string | null;
+    globalTwitterImageUrl?: string | null;
+    globalOgImageWidth?: number;
+    globalOgImageHeight?: number;
 }
 
 export interface Product {
@@ -78,6 +96,21 @@ export interface ProductDetail extends Product {
         price: number;
         mrp: number | null;
     }[];
+}
+
+export interface SeoMeta {
+    title: string;
+    description: string;
+    twitterTitle?: string | null;
+    twitterDescription?: string | null;
+    keywords?: string | null;
+    canonicalUrl: string;
+    imageUrl: string;
+    twitterImageUrl?: string | null;
+    imageWidth?: string | null;
+    imageHeight?: string | null;
+    imageAlt?: string | null;
+    type?: 'website' | 'article' | 'product';
 }
 
 export interface CartItem {

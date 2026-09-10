@@ -108,6 +108,9 @@ export default function Checkout({
         initialAppliedCoupon?.code ?? '',
     );
     const [stateOpen, setStateOpen] = React.useState(false);
+    const [pincodeLookupStatus, setPincodeLookupStatus] = React.useState<
+        'idle' | 'loading' | 'found' | 'not_found'
+    >('idle');
     const isAuthenticated = Boolean(user);
     const checkoutDraftKey = 'checkout_form_draft';
     const emptyDraft: CheckoutDraft = {
@@ -139,10 +142,13 @@ export default function Checkout({
         window.sessionStorage.setItem(checkoutDraftKey, JSON.stringify(draft));
     };
 
-    const handleRemoveItem = (productId: string) => {
+    const handleRemoveItem = (
+        productId: string,
+        measurementValue?: number | null,
+    ) => {
         router.post(
             '/cart/remove',
-            { productId, redirectWhenEmpty: true },
+            { productId, measurementValue, redirectWhenEmpty: true },
             {
                 preserveScroll: true,
                 preserveState: false,
@@ -226,6 +232,49 @@ export default function Checkout({
         setCouponCode(initialAppliedCoupon?.code ?? '');
     }, [initialAppliedCoupon]);
 
+    React.useEffect(() => {
+        if (!/^\d{6}$/.test(formData.pincode)) {
+            setPincodeLookupStatus('idle');
+            return;
+        }
+
+        const controller = new AbortController();
+        const lookup = async () => {
+            setPincodeLookupStatus('loading');
+            try {
+                const response = await fetch(
+                    `/api/pincode/${formData.pincode}`,
+                    {
+                        headers: { Accept: 'application/json' },
+                        signal: controller.signal,
+                    },
+                );
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    setPincodeLookupStatus('not_found');
+                    return;
+                }
+                setFormData((previous) => ({
+                    ...previous,
+                    city: data.city,
+                    state: data.state,
+                }));
+                setErrors((previous) => ({
+                    ...previous,
+                    city: '',
+                    state: '',
+                    pincode: '',
+                }));
+                setPincodeLookupStatus('found');
+            } catch (error) {
+                if ((error as Error).name !== 'AbortError')
+                    setPincodeLookupStatus('not_found');
+            }
+        };
+        void lookup();
+        return () => controller.abort();
+    }, [formData.pincode]);
+
     if (!cart || cart.length === 0) {
         return (
             <SiteLayout settings={settings} products={products} user={user}>
@@ -306,6 +355,11 @@ export default function Checkout({
         if (!/^\d{6}$/.test(value)) {
             return 'Pincode must be exactly 6 digits';
         }
+        if (pincodeLookupStatus === 'loading') return 'Verifying PIN code…';
+        if (pincodeLookupStatus === 'not_found')
+            return 'Please enter a valid serviceable PIN code.';
+        if (pincodeLookupStatus !== 'found')
+            return 'Please wait while we verify this PIN code.';
         return '';
     };
 
@@ -451,6 +505,8 @@ export default function Checkout({
                 },
                 credentials: 'same-origin',
                 body: JSON.stringify({
+                    customerName: user?.name || '',
+                    customerEmail: user?.email || '',
                     address: formData.address,
                     city: formData.city,
                     state: formData.state,
@@ -460,7 +516,7 @@ export default function Checkout({
 
             const data = await response.json();
 
-            if (!data.success) {
+            if (!response.ok || !data.success) {
                 toast.error(data.message || 'Failed to create payment order');
                 setIsProcessing(false);
                 return;
@@ -472,7 +528,7 @@ export default function Checkout({
                 amount: data.amount,
                 currency: data.currency,
                 order_id: data.order_id,
-                name: settings.site_name || 'Natural Rudraksh',
+                name: settings.site_name || 'Herbs',
                 description: `Order for ${cartCount} items`,
                 prefill: {
                     name: user?.name || '',
@@ -573,7 +629,7 @@ export default function Checkout({
                     },
                 },
                 theme: {
-                    color: '#ea580c', // Orange theme
+                    color: '#2e7b43',
                 },
             };
 
@@ -624,6 +680,8 @@ export default function Checkout({
         router.post(
             '/checkout',
             {
+                customerName: user?.name || '',
+                customerEmail: user?.email || '',
                 address: formData.address,
                 city: formData.city,
                 state: formData.state,
@@ -945,6 +1003,18 @@ export default function Checkout({
                                                     }
                                                     disabled={isProcessing}
                                                 />
+                                                {pincodeLookupStatus ===
+                                                    'loading' && (
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Verifying PIN code…
+                                                    </p>
+                                                )}
+                                                {pincodeLookupStatus ===
+                                                    'found' && (
+                                                    <p className="text-xs text-emerald-600">
+                                                        City and state updated.
+                                                    </p>
+                                                )}
                                                 {errors.pincode && (
                                                     <p className="text-sm text-red-500">
                                                         {errors.pincode}
@@ -1065,7 +1135,7 @@ export default function Checkout({
                                         <div className="space-y-3">
                                             {cart.map((item) => (
                                                 <div
-                                                    key={item.id}
+                                                    key={`${item.id}-${item.measurement_value ?? 'default'}`}
                                                     className="flex items-start gap-3"
                                                 >
                                                     <img
@@ -1106,6 +1176,7 @@ export default function Checkout({
                                                         onClick={() =>
                                                             handleRemoveItem(
                                                                 item.id,
+                                                                item.measurement_value,
                                                             )
                                                         }
                                                         className="text-muted-foreground transition-colors hover:text-destructive"

@@ -73,6 +73,31 @@
     font-family: var(--font-display);
 }
 
+@keyframes ticker-left-to-right {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(100vw);
+    }
+}
+
+.ticker-track {
+    display: inline-block;
+    min-width: 100%;
+    animation: ticker-left-to-right 18s linear infinite;
+}
+
+.ticker-track:hover {
+    animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ticker-track {
+        animation: none;
+    }
+}
+
 @keyframes dashboard-glass-shimmer {
     from {
         transform: translateX(-140%) skewX(-18deg);

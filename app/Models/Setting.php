@@ -24,6 +24,23 @@ use MongoDB\Laravel\Eloquent\Model;
  * @property int $country_cover
  * @property string|null $header_scripts
  * @property string|null $footer_scripts
+ * @property string|null $default_video_1
+ * @property string|null $default_video_2
+ * @property string|null $homepage_video
+ * @property string|null $category_video
+ * @property array|null $verification_files
+ * @property array|null $trust_features
+ * @property string|null $ticker_text
+ * @property bool $ticker_enabled
+ * @property string|null $global_meta_title
+ * @property string|null $global_meta_description
+ * @property string|null $global_meta_keywords
+ * @property string|null $global_og_title
+ * @property string|null $global_og_description
+ * @property string|null $global_og_image_url
+ * @property string|null $global_twitter_title
+ * @property string|null $global_twitter_description
+ * @property string|null $global_twitter_image_url
  * @property string|null $updated_by
  * @property \Carbon\Carbon|null $created_at
  * @property \Carbon\Carbon|null $updated_at
@@ -73,6 +90,27 @@ final class Setting extends Model
         'header_scripts',
         'footer_scripts',
 
+        // Default product videos
+        'default_video_1',
+        'default_video_2',
+        'homepage_video',
+        'category_video',
+        'verification_files',
+        'trust_features',
+        'ticker_text',
+        'ticker_enabled',
+
+        // Global SEO defaults
+        'global_meta_title',
+        'global_meta_description',
+        'global_meta_keywords',
+        'global_og_title',
+        'global_og_description',
+        'global_og_image_url',
+        'global_twitter_title',
+        'global_twitter_description',
+        'global_twitter_image_url',
+
         'updated_by',
     ];
 
@@ -89,6 +127,9 @@ final class Setting extends Model
         'cod_charge' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'verification_files' => 'array',
+        'trust_features' => 'array',
+        'ticker_enabled' => 'boolean',
     ];
 
     /**
@@ -116,11 +157,39 @@ final class Setting extends Model
                 'cod_charge' => 50,
                 'header_scripts' => null,
                 'footer_scripts' => null,
+                'homepage_video' => null,
+                'category_video' => null,
+                'verification_files' => [],
+                'trust_features' => [],
+                'ticker_text' => 'For Bulk Order (B2B Business) Contact Us Directly Via(Call/Whatsapp)',
+                'ticker_enabled' => true,
+                'global_meta_title' => null,
+                'global_meta_description' => null,
+                'global_meta_keywords' => null,
+                'global_og_title' => null,
+                'global_og_description' => null,
+                'global_og_image_url' => null,
+                'global_twitter_title' => null,
+                'global_twitter_description' => null,
+                'global_twitter_image_url' => null,
             ]);
         }
 
         if ($settings->cod_charge === null) {
             $settings->cod_charge = 50;
+            $settings->save();
+        }
+
+        $attributes = $settings->getAttributes();
+        if (! array_key_exists('ticker_text', $attributes)) {
+            $settings->ticker_text = 'For Bulk Order (B2B Business) Contact Us Directly Via(Call/Whatsapp)';
+        }
+
+        if (! array_key_exists('ticker_enabled', $attributes)) {
+            $settings->ticker_enabled = true;
+        }
+
+        if (! array_key_exists('ticker_text', $attributes) || ! array_key_exists('ticker_enabled', $attributes)) {
             $settings->save();
         }
 

@@ -37,9 +37,16 @@ final class CategoryRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:500'],
             'status' => ['required', 'in:active,inactive'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            'show_video' => ['nullable', 'boolean'],
+            'show_banner' => ['nullable', 'boolean'],
         ];
 
         $rules['image'] = ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'];
+        $rules['remove_image'] = ['nullable', 'boolean'];
+        $rules['video'] = ['nullable', 'file', 'mimes:mp4,mov,avi,mkv,webm', 'max:102400'];
+        $rules['remove_video'] = ['nullable', 'boolean'];
+        $rules['banner'] = ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'];
+        $rules['remove_banner'] = ['nullable', 'boolean'];
 
         return $rules;
     }
@@ -52,6 +59,8 @@ final class CategoryRequest extends FormRequest
         return [
             'name' => 'category name',
             'sort_order' => 'display order',
+            'video' => 'category video',
+            'banner' => 'category banner',
         ];
     }
 

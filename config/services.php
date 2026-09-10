@@ -37,4 +37,13 @@ return [
         ],
     ],
 
+    'text2india' => [
+        'base_url' => env('TEXT2INDIA_BASE_URL', 'https://text2india.store/vb/apikey.php'),
+        'api_key' => env('TEXT2INDIA_API_KEY'),
+        'sender_id' => env('TEXT2INDIA_SENDER_ID'),
+        'templates' => [
+            'otp' => env('TEXT2INDIA_OTP_TEMPLATE_ID'),
+        ],
+    ],
+
 ];

@@ -149,6 +149,11 @@ export function AdminSidebar({
                     href: '/admin/cms/banner',
                 },
                 {
+                    label: 'About Page',
+                    icon: <Users className="h-4 w-4" />,
+                    href: '/admin/cms/about',
+                },
+                {
                     label: 'CMS Section',
                     icon: <Section className="h-4 w-4" />,
                     href: '/admin/cms/sections',

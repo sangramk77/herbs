@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, router } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -204,12 +204,67 @@ export default function EditProduct({
 
     const [tags, setTags] = useState<string[]>([]);
     const [videos, setVideos] = useState<File[]>([]);
+    const [videoState, setVideoState] = useState(() => ({
+        videos: productForForm.videos ?? [],
+        statuses: productForForm.video_conversion_status ?? [],
+    }));
     const [userEditedFields, setUserEditedFields] = useState({
         description: !!productForForm.description,
         metaTitle: !!productForForm.meta_title,
         metaDescription: !!productForForm.meta_description,
     });
     const watchedMrp = useWatch({ control: form.control, name: 'mrp' });
+
+    useEffect(() => {
+        if (
+            !videoState.statuses.some((video) =>
+                ['queued', 'processing'].includes(video.status),
+            )
+        )
+            return;
+        const timer = window.setInterval(async () => {
+            const response = await fetch(
+                `/admin/products/${productForForm._id ?? productForForm.id}/video-status`,
+                { headers: { Accept: 'application/json' } },
+            );
+            if (response.ok) {
+                const data = await response.json();
+                setVideoState({
+                    videos: data.videos ?? [],
+                    statuses: data.video_conversion_status ?? [],
+                });
+            }
+        }, 3000);
+        return () => window.clearInterval(timer);
+    }, [productForForm._id, productForForm.id, videoState.statuses]);
+
+    const deleteConvertedVideo = async (index: number) => {
+        const response = await fetch(
+            `/admin/products/${productForForm._id ?? productForForm.id}/videos`,
+            {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN':
+                        document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute('content') ?? '',
+                },
+                body: JSON.stringify({ index }),
+            },
+        );
+        const data = await response.json();
+        if (!response.ok) {
+            toast.error(data.message ?? 'Unable to delete video.');
+            return;
+        }
+        setVideoState({
+            videos: data.videos ?? [],
+            statuses: data.video_conversion_status ?? [],
+        });
+        toast.success('Video deleted.');
+    };
     const watchedSellPrice = useWatch({
         control: form.control,
         name: 'sellPrice',
@@ -945,11 +1000,9 @@ export default function EditProduct({
                                                     ))}
                                                 </ul>
                                             )}
-                                            {(productForForm
-                                                .video_conversion_status
-                                                ?.length ?? 0) > 0 && (
+                                            {videoState.statuses.length > 0 && (
                                                 <ul className="space-y-1 text-sm text-muted-foreground">
-                                                    {productForForm.video_conversion_status?.map(
+                                                    {videoState.statuses.map(
                                                         (video) => (
                                                             <li key={video.id}>
                                                                 Video
@@ -968,16 +1021,39 @@ export default function EditProduct({
                                                     )}
                                                 </ul>
                                             )}
-                                            {(productForForm.videos?.length ??
-                                                0) > 0 && (
-                                                <p className="text-sm text-emerald-600">
-                                                    {
-                                                        productForForm.videos
-                                                            ?.length
-                                                    }{' '}
-                                                    video(s) ready for
-                                                    storefront playback.
-                                                </p>
+                                            {videoState.videos.length > 0 && (
+                                                <div className="space-y-2 text-sm text-emerald-600">
+                                                    {videoState.videos.map(
+                                                        (video, index) => (
+                                                            <div
+                                                                key={video}
+                                                                className="flex items-center justify-between gap-3"
+                                                            >
+                                                                <span>
+                                                                    Video{' '}
+                                                                    {index + 1}{' '}
+                                                                    ready for
+                                                                    storefront
+                                                                    playback.
+                                                                </span>
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="text-destructive"
+                                                                    onClick={() =>
+                                                                        void deleteConvertedVideo(
+                                                                            index,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <Trash2 className="mr-1 h-4 w-4" />{' '}
+                                                                    Delete
+                                                                </Button>
+                                                            </div>
+                                                        ),
+                                                    )}
+                                                </div>
                                             )}
                                         </div>
                                     </div>

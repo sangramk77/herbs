@@ -29,6 +29,7 @@ import type {
     NavCategory,
     Product,
     ProductDetail as ProductDetailType,
+    SeoMeta,
     Settings,
 } from '@/types/site-types';
 import 'yet-another-react-lightbox/plugins/thumbnails.css';
@@ -47,6 +48,7 @@ interface ProductDetailProps {
     popular_product: Product[];
     featured_product: Product[];
     all_product: Product[];
+    seo?: SeoMeta;
     auth: {
         user?: {
             name: string;
@@ -67,6 +69,7 @@ export default function ProductDetail({
     popular_product,
     featured_product,
     all_product,
+    seo,
     auth,
 }: ProductDetailProps) {
     const page = usePage<{
@@ -153,17 +156,22 @@ export default function ProductDetail({
     const appUrl = (
         import.meta.env.VITE_APP_URL as string | undefined
     )?.replace(/\/$/, '');
-    const canonicalUrl = appUrl ? `${appUrl}${productPath}` : productPath;
+    const canonicalUrl =
+        seo?.canonicalUrl || (appUrl ? `${appUrl}${productPath}` : productPath);
     const shareUrl =
         typeof window !== 'undefined' ? window.location.href : canonicalUrl;
-    const metaTitle = product_details.metaTitle || product_details.productsName;
+    const metaTitle =
+        seo?.title || product_details.metaTitle || product_details.productsName;
     const metaDescription =
-        product_details.metaDescription || product_details.short_description;
-    const productImageUrl = product_details.image1Url
-        ? product_details.image1Url
-        : appUrl
-          ? `${appUrl}/uploads/products/${product_details.image1}`
-          : `/uploads/products/${product_details.image1}`;
+        seo?.description ||
+        product_details.metaDescription ||
+        product_details.short_description;
+    const productImageUrl =
+        seo?.imageUrl || product_details.image1Url
+            ? product_details.image1Url
+            : appUrl
+              ? `${appUrl}/uploads/products/${product_details.image1}`
+              : `/uploads/products/${product_details.image1}`;
 
     const handleCopyLink = async () => {
         try {
@@ -194,7 +202,14 @@ export default function ProductDetail({
 
     // De-duplicate just in case
     const uniqueGalleryImages = Array.from(new Set(galleryImages));
-    const productVideos = product_details.videos ?? [];
+    const productVideos =
+        product_details.videos && product_details.videos.length > 0
+            ? product_details.videos.map(
+                  (video) => `/uploads/products/videos/${video}`,
+              )
+            : [settings.default_video_1, settings.default_video_2]
+                  .filter((video): video is string => Boolean(video))
+                  .map((video) => `/uploads/settings/videos/${video}`);
 
     const handleAddToCart = () => {
         // Ensure we're using the current state value
@@ -259,16 +274,22 @@ export default function ProductDetail({
                 <meta name="description" content={metaDescription} />
                 <meta
                     name="keywords"
-                    content={product_details.metaKeyword?.join(', ')}
+                    content={
+                        seo?.keywords || product_details.metaKeyword?.join(', ')
+                    }
                 />
                 <meta property="og:type" content="product" />
                 <meta
                     property="og:title"
-                    content={product_details.ogTitle || metaTitle}
+                    content={seo?.title || product_details.ogTitle || metaTitle}
                 />
                 <meta
                     property="og:description"
-                    content={product_details.ogDescription || metaDescription}
+                    content={
+                        seo?.description ||
+                        product_details.ogDescription ||
+                        metaDescription
+                    }
                 />
                 <meta property="og:url" content={canonicalUrl} />
                 <meta property="og:image" content={productImageUrl} />
@@ -276,6 +297,7 @@ export default function ProductDetail({
                 <meta
                     name="twitter:title"
                     content={
+                        seo?.twitterTitle ||
                         product_details.twitterTitle ||
                         product_details.ogTitle ||
                         metaTitle
@@ -284,12 +306,16 @@ export default function ProductDetail({
                 <meta
                     name="twitter:description"
                     content={
+                        seo?.twitterDescription ||
                         product_details.twitterDescription ||
                         product_details.ogDescription ||
                         metaDescription
                     }
                 />
-                <meta name="twitter:image" content={productImageUrl} />
+                <meta
+                    name="twitter:image"
+                    content={seo?.twitterImageUrl || productImageUrl}
+                />
                 <link rel="canonical" href={canonicalUrl} />
             </Head>
 
@@ -476,7 +502,7 @@ export default function ProductDetail({
                                                     playsInline
                                                 >
                                                     <source
-                                                        src={`/uploads/products/videos/${video}`}
+                                                        src={video}
                                                         type="video/mp4"
                                                     />
                                                     Your browser does not
