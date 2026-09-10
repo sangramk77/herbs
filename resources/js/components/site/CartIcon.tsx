@@ -20,12 +20,14 @@ interface CartIconProps {
 export function CartIcon({ count, price, items }: CartIconProps) {
     const updateCartQuantity = (
         productId: string,
+        measurementValue: number | null | undefined,
         action: 'increase' | 'decrease',
     ) => {
         router.post(
             '/cart/update',
             {
                 productId,
+                measurementValue,
                 action,
             },
             {
@@ -78,7 +80,7 @@ export function CartIcon({ count, price, items }: CartIconProps) {
 
                             return (
                                 <div
-                                    key={item.id}
+                                    key={`${item.id}-${item.measurement_value ?? 'default'}`}
                                     className="flex gap-3 border-b p-3 transition-colors last:border-0 hover:bg-muted/50 sm:gap-4 sm:p-4"
                                 >
                                     <Link
@@ -107,6 +109,8 @@ export function CartIcon({ count, price, items }: CartIconProps) {
                                                             {
                                                                 productId:
                                                                     item.id,
+                                                                measurementValue:
+                                                                    item.measurement_value,
                                                             },
                                                             {
                                                                 preserveScroll: true,
@@ -138,6 +142,7 @@ export function CartIcon({ count, price, items }: CartIconProps) {
                                                             ) {
                                                                 updateCartQuantity(
                                                                     item.id,
+                                                                    item.measurement_value,
                                                                     'decrease',
                                                                 );
                                                             } else {
@@ -163,6 +168,7 @@ export function CartIcon({ count, price, items }: CartIconProps) {
                                                             event.stopPropagation();
                                                             updateCartQuantity(
                                                                 item.id,
+                                                                item.measurement_value,
                                                                 'increase',
                                                             );
                                                         }}

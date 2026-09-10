@@ -64,7 +64,7 @@ final class CartController extends Controller
                 $cart[$cartKey]['categoryId'] = (string) $product->category_id;
             }
         } else {
-            $cart[$productId] = [
+            $cart[$cartKey] = [
                 'id' => $productId,
                 'name' => $product->name,
                 'price' => $measurement['price'] ?? $product->sell_price,

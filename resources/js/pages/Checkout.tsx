@@ -139,10 +139,13 @@ export default function Checkout({
         window.sessionStorage.setItem(checkoutDraftKey, JSON.stringify(draft));
     };
 
-    const handleRemoveItem = (productId: string) => {
+    const handleRemoveItem = (
+        productId: string,
+        measurementValue?: number | null,
+    ) => {
         router.post(
             '/cart/remove',
-            { productId, redirectWhenEmpty: true },
+            { productId, measurementValue, redirectWhenEmpty: true },
             {
                 preserveScroll: true,
                 preserveState: false,
@@ -474,7 +477,7 @@ export default function Checkout({
                 amount: data.amount,
                 currency: data.currency,
                 order_id: data.order_id,
-                name: settings.site_name || 'Natural Rudraksh',
+                name: settings.site_name || 'Herbs',
                 description: `Order for ${cartCount} items`,
                 prefill: {
                     name: user?.name || '',
@@ -575,7 +578,7 @@ export default function Checkout({
                     },
                 },
                 theme: {
-                    color: '#ea580c', // Orange theme
+                    color: '#2e7b43',
                 },
             };
 
@@ -1069,7 +1072,7 @@ export default function Checkout({
                                         <div className="space-y-3">
                                             {cart.map((item) => (
                                                 <div
-                                                    key={item.id}
+                                                    key={`${item.id}-${item.measurement_value ?? 'default'}`}
                                                     className="flex items-start gap-3"
                                                 >
                                                     <img
@@ -1110,6 +1113,7 @@ export default function Checkout({
                                                         onClick={() =>
                                                             handleRemoveItem(
                                                                 item.id,
+                                                                item.measurement_value,
                                                             )
                                                         }
                                                         className="text-muted-foreground transition-colors hover:text-destructive"
