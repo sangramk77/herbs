@@ -67,6 +67,36 @@ final class SettingRequest extends FormRequest
             $rules['youtube_link'] = ['nullable', 'url', 'max:255'];
         }
 
+        foreach ([
+            'global_meta_title',
+            'global_og_title',
+            'global_twitter_title',
+        ] as $field) {
+            if ($this->has($field)) {
+                $rules[$field] = ['nullable', 'string', 'max:120'];
+            }
+        }
+
+        foreach ([
+            'global_meta_description',
+            'global_og_description',
+            'global_twitter_description',
+        ] as $field) {
+            if ($this->has($field)) {
+                $rules[$field] = ['nullable', 'string', 'max:160'];
+            }
+        }
+
+        if ($this->has('global_meta_keywords')) {
+            $rules['global_meta_keywords'] = ['nullable', 'string', 'max:500'];
+        }
+
+        foreach (['global_og_image_url', 'global_twitter_image_url'] as $field) {
+            if ($this->has($field)) {
+                $rules[$field] = ['nullable', 'url', 'max:2048'];
+            }
+        }
+
         // Counter Settings Validation
         if ($this->has('active_clients')) {
             $rules['active_clients'] = ['nullable', 'integer', 'min:0'];
@@ -85,41 +115,56 @@ final class SettingRequest extends FormRequest
         }
 
         if ($this->has('header_scripts')) {
-            $rules['header_scripts'] = [
-                'nullable',
-                'string',
-                function ($attribute, $value, $fail) {
-                    $items = array_filter(
-                        array_map(trim(...), explode(',', (string) $value)),
-                        fn ($item) => $item !== ''
-                    );
-                    foreach ($items as $item) {
-                        if (! preg_match('/^https?:\/\//i', $item)) {
-                            $fail('Header scripts must be http/https URLs.');
-                            break;
-                        }
-                    }
-                },
-            ];
+            $rules['header_scripts'] = ['nullable', 'string', 'max:100000'];
         }
 
         if ($this->has('footer_scripts')) {
-            $rules['footer_scripts'] = [
-                'nullable',
-                'string',
-                function ($attribute, $value, $fail) {
-                    $items = array_filter(
-                        array_map(trim(...), explode(',', (string) $value)),
-                        fn ($item) => $item !== ''
-                    );
-                    foreach ($items as $item) {
-                        if (! preg_match('/^https?:\/\//i', $item)) {
-                            $fail('Footer scripts must be http/https URLs.');
-                            break;
-                        }
-                    }
-                },
-            ];
+            $rules['footer_scripts'] = ['nullable', 'string', 'max:100000'];
+        }
+
+        if ($this->has('ads_txt')) {
+            $rules['ads_txt'] = ['nullable', 'string', 'max:20000'];
+        }
+
+        if ($this->has('ticker_text')) {
+            $rules['ticker_text'] = ['nullable', 'string', 'max:255'];
+        }
+
+        if ($this->has('ticker_enabled')) {
+            $rules['ticker_enabled'] = ['boolean'];
+        }
+
+        if ($this->has('default_video_1') || $this->hasFile('default_video_1')) {
+            $rules['default_video_1'] = ['nullable', 'file', 'mimes:mp4,webm,mov', 'max:102400'];
+        }
+
+        if ($this->has('default_video_2') || $this->hasFile('default_video_2')) {
+            $rules['default_video_2'] = ['nullable', 'file', 'mimes:mp4,webm,mov', 'max:102400'];
+        }
+
+        if ($this->has('homepage_video') || $this->hasFile('homepage_video')) {
+            $rules['homepage_video'] = ['nullable', 'file', 'mimes:mp4,webm,mov', 'max:102400'];
+        }
+
+        if ($this->has('category_video') || $this->hasFile('category_video')) {
+            $rules['category_video'] = ['nullable', 'file', 'mimes:mp4,webm,mov', 'max:102400'];
+        }
+
+        if ($this->hasFile('verification_files')) {
+            $rules['verification_files'] = ['required', 'array', 'max:10'];
+            $rules['verification_files.*'] = ['required', 'file', 'max:1024'];
+        }
+
+        if ($this->hasFile('trust_feature_image')) {
+            $rules['trust_feature_image'] = ['required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:5120'];
+        }
+
+        if ($this->has('trust_feature_id')) {
+            $rules['trust_feature_id'] = ['required', 'string', 'max:80'];
+        }
+
+        if ($this->has('filename')) {
+            $rules['filename'] = ['required', 'string', 'max:180'];
         }
 
         return $rules;
@@ -143,12 +188,31 @@ final class SettingRequest extends FormRequest
             'twitter_link' => 'Twitter link',
             'instagram_link' => 'Instagram link',
             'youtube_link' => 'YouTube link',
+            'global_meta_title' => 'global SEO title',
+            'global_meta_description' => 'global SEO description',
+            'global_meta_keywords' => 'global SEO keywords',
+            'global_og_title' => 'global Open Graph title',
+            'global_og_description' => 'global Open Graph description',
+            'global_og_image_url' => 'global Open Graph image URL',
+            'global_twitter_title' => 'global Twitter title',
+            'global_twitter_description' => 'global Twitter description',
+            'global_twitter_image_url' => 'global Twitter image URL',
             'active_clients' => 'active clients',
             'varieties_of_rudraksha' => 'varieties of rudraksha',
             'active_products' => 'active products',
             'country_cover' => 'country cover',
             'header_scripts' => 'header scripts',
             'footer_scripts' => 'footer scripts',
+            'ads_txt' => 'ads.txt',
+            'ticker_text' => 'ticker text',
+            'ticker_enabled' => 'ticker status',
+            'verification_files' => 'verification files',
+            'verification_files.*' => 'verification file',
+            'trust_feature_image' => 'trust feature image',
+            'trust_feature_id' => 'trust feature',
+            'filename' => 'filename',
+            'homepage_video' => 'homepage video',
+            'category_video' => 'category video',
         ];
     }
 
@@ -178,6 +242,8 @@ final class SettingRequest extends FormRequest
             'country_cover.min' => 'Country cover must be at least 0.',
             'header_scripts.string' => 'Header scripts must be text.',
             'footer_scripts.string' => 'Footer scripts must be text.',
+            'ads_txt.max' => 'ads.txt content must not exceed 20,000 characters.',
+            'ticker_text.max' => 'Ticker text must not exceed 255 characters.',
         ];
     }
 }

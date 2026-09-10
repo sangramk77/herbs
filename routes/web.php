@@ -205,7 +205,18 @@ Route::prefix('admin')->middleware(['auth:admin', 'admin'])->group(function () {
         Route::post('/settings/general', [App\Http\Controllers\Admin\SettingController::class, 'updateGeneral'])->name('admin.system.settings.general');
         Route::post('/settings/counter', [App\Http\Controllers\Admin\SettingController::class, 'updateCounter'])->name('admin.system.settings.counter');
         Route::post('/settings/social-media', [App\Http\Controllers\Admin\SettingController::class, 'updateSocialMedia'])->name('admin.system.settings.social-media');
+        Route::post('/settings/seo', [App\Http\Controllers\Admin\SettingController::class, 'updateSeo'])->name('admin.system.settings.seo');
         Route::post('/settings/scripts', [App\Http\Controllers\Admin\SettingController::class, 'updateScripts'])->name('admin.system.settings.scripts');
+        Route::post('/settings/ads-txt', [App\Http\Controllers\Admin\SettingController::class, 'updateAdsTxt'])->name('admin.system.settings.ads-txt');
+        Route::post('/settings/ticker', [App\Http\Controllers\Admin\SettingController::class, 'updateTicker'])->name('admin.system.settings.ticker');
+        Route::delete('/settings/ticker', [App\Http\Controllers\Admin\SettingController::class, 'deleteTicker'])->name('admin.system.settings.ticker.delete');
+        Route::post('/settings/verification-files', [App\Http\Controllers\Admin\SettingController::class, 'uploadVerificationFile'])->name('admin.system.settings.verification-files');
+        Route::delete('/settings/verification-files', [App\Http\Controllers\Admin\SettingController::class, 'deleteVerificationFile'])->name('admin.system.settings.verification-files.delete');
+        Route::post('/settings/trust-features', [App\Http\Controllers\Admin\SettingController::class, 'uploadTrustFeature'])->name('admin.system.settings.trust-features');
+        Route::post('/settings/trust-features/{id}', [App\Http\Controllers\Admin\SettingController::class, 'updateTrustFeature'])->name('admin.system.settings.trust-features.update');
+        Route::delete('/settings/trust-features', [App\Http\Controllers\Admin\SettingController::class, 'deleteTrustFeature'])->name('admin.system.settings.trust-features.delete');
+        Route::post('/settings/default-videos', [App\Http\Controllers\Admin\SettingController::class, 'updateDefaultVideos'])->name('admin.system.settings.default-videos');
+        Route::delete('/settings/default-videos', [App\Http\Controllers\Admin\SettingController::class, 'deleteDefaultVideo'])->name('admin.system.settings.default-videos.delete');
     });
 
     // CMS Routes

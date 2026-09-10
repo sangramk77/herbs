@@ -9,7 +9,7 @@ import type {
 
 import { MainNavigation } from './MainNavigation';
 import { MobileMenu } from './MobileMenu';
-import { TopBar } from './TopBar';
+import { TickerBar } from './TopBar';
 
 interface SiteHeaderProps {
     settings: Settings;
@@ -118,11 +118,9 @@ export function SiteHeader({
 
     return (
         <header className="z-50 bg-white shadow-sm">
-            {/* Top Bar */}
-            <TopBar
-                message="For Bulk Order (B2B Business)"
-                linkText="Contact Us Directly Via(Call/Whatsapp)"
-                linkUrl="/contact"
+            <TickerBar
+                text={settings.tickerText}
+                enabled={settings.tickerEnabled}
             />
 
             {/* Main unified navigation bar */}

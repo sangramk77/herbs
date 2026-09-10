@@ -6,6 +6,7 @@ import { CounterSection } from '@/components/home/CounterSection';
 import { FeaturedProducts } from '@/components/home/FeaturedProducts';
 import { GemsPromo } from '@/components/home/GemsPromo';
 import { HeroSlider } from '@/components/home/HeroSlider';
+import { HomeVideoSection } from '@/components/home/HomeVideoSection';
 import { LatestProducts } from '@/components/home/LatestProducts';
 import { TestimonialSection } from '@/components/home/TestimonialSection';
 import { TrustFeatures } from '@/components/home/TrustFeatures';
@@ -91,6 +92,8 @@ export default function HomePage({
                 {/* Hero Slider */}
                 <HeroSlider banners={banner} />
 
+                <HomeVideoSection videoPath={settings.homepageVideo} />
+
                 {/* Category Carousel */}
                 {/* <CategoryCarousel products={product} /> */}
 
@@ -122,7 +125,7 @@ export default function HomePage({
                 <BlogSection blogs={blog} />
 
                 {/* Trust Features */}
-                <TrustFeatures />
+                <TrustFeatures features={settings.trustFeatures} />
             </div>
 
             {/* Back to Top Button */}

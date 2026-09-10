@@ -40,7 +40,7 @@ interface SiteLayoutProps {
 
 export default function SiteLayout({
     children,
-    title = 'Natural Rudraksh',
+    title,
     settings,
     metaDescription,
     metaKeywords,
@@ -101,7 +101,43 @@ export default function SiteLayout({
     const pageUrl =
         canonicalUrl ||
         (typeof window !== 'undefined' ? window.location.href : undefined);
-    const twitterCard = ogImage ? 'summary_large_image' : 'summary';
+    const resolvedTitle =
+        title || settings.globalMetaTitle || settings.site_name || 'Herbs';
+    const resolvedMetaDescription =
+        metaDescription || settings.globalMetaDescription || undefined;
+    const resolvedMetaKeywords =
+        metaKeywords || settings.globalMetaKeywords || undefined;
+    const resolvedOgTitle =
+        title ||
+        settings.globalOgTitle ||
+        settings.globalMetaTitle ||
+        resolvedTitle;
+    const resolvedOgDescription =
+        metaDescription ||
+        settings.globalOgDescription ||
+        settings.globalMetaDescription ||
+        undefined;
+    const resolvedOgImage = ogImage || settings.globalOgImageUrl || undefined;
+    const resolvedTwitterTitle =
+        title ||
+        settings.globalTwitterTitle ||
+        settings.globalOgTitle ||
+        settings.globalMetaTitle ||
+        resolvedTitle;
+    const resolvedTwitterDescription =
+        metaDescription ||
+        settings.globalTwitterDescription ||
+        settings.globalOgDescription ||
+        settings.globalMetaDescription ||
+        undefined;
+    const resolvedTwitterImage =
+        ogImage ||
+        settings.globalTwitterImageUrl ||
+        settings.globalOgImageUrl ||
+        undefined;
+    const twitterCard = resolvedTwitterImage
+        ? 'summary_large_image'
+        : 'summary';
 
     const parseScripts = (value?: string) =>
         (value ?? '')
@@ -119,29 +155,39 @@ export default function SiteLayout({
     return (
         <>
             <Head>
-                <title>{title}</title>
-                {metaDescription && (
-                    <meta name="description" content={metaDescription} />
-                )}
-                {metaKeywords && (
-                    <meta name="keywords" content={metaKeywords} />
-                )}
-                <meta property="og:type" content={ogType} />
-                <meta property="og:title" content={title} />
-                {metaDescription && (
-                    <meta property="og:description" content={metaDescription} />
-                )}
-                {pageUrl && <meta property="og:url" content={pageUrl} />}
-                {ogImage && <meta property="og:image" content={ogImage} />}
-                <meta name="twitter:card" content={twitterCard} />
-                <meta name="twitter:title" content={title} />
-                {metaDescription && (
+                <title>{resolvedTitle}</title>
+                {resolvedMetaDescription && (
                     <meta
-                        name="twitter:description"
-                        content={metaDescription}
+                        name="description"
+                        content={resolvedMetaDescription}
                     />
                 )}
-                {ogImage && <meta name="twitter:image" content={ogImage} />}
+                {resolvedMetaKeywords && (
+                    <meta name="keywords" content={resolvedMetaKeywords} />
+                )}
+                <meta property="og:type" content={ogType} />
+                <meta property="og:title" content={resolvedOgTitle} />
+                {resolvedOgDescription && (
+                    <meta
+                        property="og:description"
+                        content={resolvedOgDescription}
+                    />
+                )}
+                {pageUrl && <meta property="og:url" content={pageUrl} />}
+                {resolvedOgImage && (
+                    <meta property="og:image" content={resolvedOgImage} />
+                )}
+                <meta name="twitter:card" content={twitterCard} />
+                <meta name="twitter:title" content={resolvedTwitterTitle} />
+                {resolvedTwitterDescription && (
+                    <meta
+                        name="twitter:description"
+                        content={resolvedTwitterDescription}
+                    />
+                )}
+                {resolvedTwitterImage && (
+                    <meta name="twitter:image" content={resolvedTwitterImage} />
+                )}
                 {pageUrl && <link rel="canonical" href={pageUrl} />}
                 {headerScripts.map((script) => (
                     <script key={script} src={script} />
