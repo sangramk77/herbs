@@ -1,6 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import { Edit, Search, Star, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -60,11 +60,17 @@ export default function BestSeller({
     filters,
 }: BestSellerProps) {
     const [search, setSearch] = useState(filters.search || '');
+    const hasInitializedSearch = useRef(false);
     const [sortOrderDraft, setSortOrderDraft] = useState<
         Record<string, string>
     >({});
 
     useEffect(() => {
+        if (!hasInitializedSearch.current) {
+            hasInitializedSearch.current = true;
+            return;
+        }
+
         const timeoutId = setTimeout(() => {
             const params: Record<string, string> = {};
             if (search) params.search = search;
@@ -128,7 +134,9 @@ export default function BestSeller({
         );
 
         if (hasInvalid) {
-            toast.error('Sorting order must be a number greater than or equal to 1');
+            toast.error(
+                'Sorting order must be a number greater than or equal to 1',
+            );
             return;
         }
 
@@ -191,9 +199,7 @@ export default function BestSeller({
                             type="text"
                             placeholder="Search best sellers..."
                             value={search}
-                            onChange={(event) =>
-                                setSearch(event.target.value)
-                            }
+                            onChange={(event) => setSearch(event.target.value)}
                             className="w-80 pr-10 pl-10"
                         />
                         {search && (
