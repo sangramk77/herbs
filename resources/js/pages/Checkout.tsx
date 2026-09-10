@@ -451,6 +451,8 @@ export default function Checkout({
                 },
                 credentials: 'same-origin',
                 body: JSON.stringify({
+                    customerName: user?.name || '',
+                    customerEmail: user?.email || '',
                     address: formData.address,
                     city: formData.city,
                     state: formData.state,
@@ -460,7 +462,7 @@ export default function Checkout({
 
             const data = await response.json();
 
-            if (!data.success) {
+            if (!response.ok || !data.success) {
                 toast.error(data.message || 'Failed to create payment order');
                 setIsProcessing(false);
                 return;
@@ -624,6 +626,8 @@ export default function Checkout({
         router.post(
             '/checkout',
             {
+                customerName: user?.name || '',
+                customerEmail: user?.email || '',
                 address: formData.address,
                 city: formData.city,
                 state: formData.state,

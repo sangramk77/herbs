@@ -7,6 +7,8 @@ namespace App\Http\Controllers;
 use App\Jobs\SendOrderPlacedEmail;
 use App\Models\Order;
 use App\Services\CouponService;
+use App\Services\ProductPurchaseService;
+use App\Services\PurchaseUnavailableException;
 use App\Services\SettingsService;
 use Exception;
 use Illuminate\Http\Request;
@@ -18,6 +20,7 @@ final class CheckoutController extends Controller
 {
     public function __construct(
         private readonly CouponService $couponService,
+        private readonly ProductPurchaseService $productPurchaseService,
     ) {}
 
     /**
@@ -56,7 +59,14 @@ final class CheckoutController extends Controller
             ]);
         }
 
-        $cartTotal = array_reduce($cart, fn ($total, $item) => $total + ($item['price'] * $item['quantity']), 0);
+        try {
+            $purchase = $this->productPurchaseService->revalidateCart($cart);
+            $cart = $purchase['cart'];
+            Session::put('cart', $cart);
+        } catch (PurchaseUnavailableException) {
+            // Final checkout provides the specific availability error.
+        }
+        $cartTotal = $this->couponService->cartSubtotal($cart);
 
         $cartCount = array_reduce($cart, fn ($count, $item) => $count + $item['quantity'], 0);
 
@@ -88,6 +98,8 @@ final class CheckoutController extends Controller
     public function process(Request $request)
     {
         $validated = $request->validate([
+            'customerName' => ['required', 'string', 'max:100'],
+            'customerEmail' => ['nullable', 'email', 'max:255'],
             'address' => ['required', 'string', 'max:255'],
             'city' => ['required', 'string', 'max:100'],
             'state' => ['required', 'string', 'max:100'],
@@ -109,7 +121,14 @@ final class CheckoutController extends Controller
             return back()->with('error', 'Your cart is empty.');
         }
 
-        $cartTotal = array_reduce($cart, fn ($total, $item) => $total + ($item['price'] * $item['quantity']), 0);
+        try {
+            $purchase = $this->productPurchaseService->revalidateCart($cart);
+        } catch (PurchaseUnavailableException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+        $cart = $purchase['cart'];
+        Session::put('cart', $cart);
+        $cartTotal = $this->couponService->cartSubtotal($cart);
         $couponData = $this->couponService->resolveSessionCoupon(
             $cart,
             Session::get('applied_coupon'),
@@ -121,17 +140,7 @@ final class CheckoutController extends Controller
         $deliveryCharge = (float) ($settings['cod_charge'] ?? 0);
         $finalTotal = max(0, $cartTotal - $discountAmount + $deliveryCharge);
 
-        $items = collect($cart)->map(fn (array $item) => [
-            'id' => $item['id'] ?? null,
-            'name' => $item['name'] ?? 'N/A',
-            'price' => (float) ($item['price'] ?? 0),
-            'quantity' => (int) ($item['quantity'] ?? 1),
-            'image' => $item['image'] ?? null,
-            'slug' => $item['slug'] ?? null,
-            'categorySlug' => $item['categorySlug'] ?? null,
-            'measurement_value' => $item['measurement_value'] ?? null,
-            'measurement_label' => $item['measurement_label'] ?? null,
-        ])->values();
+        $items = $purchase['items'];
 
         $shippingAddress = [
             'line1' => $validated['address'],
@@ -141,23 +150,31 @@ final class CheckoutController extends Controller
             'country' => 'India',
         ];
 
-        $order = Order::create([
-            'user_id' => $request->user()->id,
-            'customer_name' => $request->user()->name,
-            'customer_email' => $request->user()->email,
-            'customer_phone' => $request->user()->phone ?? null,
-            'shipping_address' => $shippingAddress,
-            'total_price' => $finalTotal,
-            'subtotal_price' => $cartTotal,
-            'coupon_code' => $couponData['code'] ?? null,
-            'coupon_id' => isset($couponData['coupon']) ? (string) $couponData['coupon']->getKey() : null,
-            'discount_amount' => $discountAmount,
-            'delivery_charge' => $deliveryCharge,
-            'status' => 'Order Placed',
-            'payment_method' => 'COD',
-            'payment_status' => 'pending',
-            'items' => $items,
-        ]);
+        $this->productPurchaseService->decrementInventory($purchase['inventory']);
+        try {
+            $order = Order::create([
+                'user_id' => $request->user()->id,
+                'customer_name' => $validated['customerName'],
+                'customer_email' => $validated['customerEmail'] ?? null,
+                'customer_phone' => $request->user()->phone ?? null,
+                'shipping_address' => $shippingAddress,
+                'total_price' => $finalTotal,
+                'subtotal_price' => $cartTotal,
+                'coupon_code' => $couponData['code'] ?? null,
+                'coupon_id' => isset($couponData['coupon']) ? (string) $couponData['coupon']->getKey() : null,
+                'discount_amount' => $discountAmount,
+                'delivery_charge' => $deliveryCharge,
+                'status' => 'Order Placed',
+                'payment_method' => 'COD',
+                'payment_status' => 'pending',
+                'items' => $items,
+            ]);
+        } catch (Exception $e) {
+            foreach ($purchase['inventory'] as $requirement) {
+                $this->productPurchaseService->restoreInventory($requirement['product_id'], $requirement['quantity']);
+            }
+            throw $e;
+        }
 
         if ($couponData && isset($couponData['coupon'])) {
             $this->couponService->recordUsage(
