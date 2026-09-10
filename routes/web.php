@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\AboutController;
+use App\Http\Controllers\Admin\AboutController as AdminAboutController;
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminManagementController;
 use App\Http\Controllers\Admin\BannerController;
@@ -41,6 +43,8 @@ Route::get('/password/token-expired', fn () => Inertia::render('auth/token-expir
 
 // Home page route
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
+Route::get('/about', [AboutController::class, 'index'])->name('about');
 
 // Product Detail Route
 Route::get('/product', [App\Http\Controllers\ProductController::class, 'index'])->name('product.index');
@@ -206,6 +210,18 @@ Route::prefix('admin')->middleware(['auth:admin', 'admin'])->group(function () {
 
     // CMS Routes
     Route::prefix('cms')->group(function () {
+        Route::get('/about', [AdminAboutController::class, 'index'])->name('admin.cms.about');
+        Route::post('/about/content', [AdminAboutController::class, 'updateAbout'])->name('admin.cms.about.content');
+        Route::delete('/about/image', [AdminAboutController::class, 'deleteAboutImage'])->name('admin.cms.about.image.delete');
+        Route::post('/about/mission-vision', [AdminAboutController::class, 'updateMissionVision'])->name('admin.cms.about.mission-vision');
+        Route::post('/about/credentials', [AdminAboutController::class, 'updateCredentials'])->name('admin.cms.about.credentials');
+        Route::post('/about/gallery', [AdminAboutController::class, 'addGalleryImage'])->name('admin.cms.about.gallery.add');
+        Route::post('/about/gallery/update', [AdminAboutController::class, 'updateGalleryImage'])->name('admin.cms.about.gallery.update');
+        Route::delete('/about/gallery', [AdminAboutController::class, 'deleteGalleryImage'])->name('admin.cms.about.gallery.delete');
+        Route::post('/about/videos', [AdminAboutController::class, 'addVideo'])->name('admin.cms.about.videos.add');
+        Route::delete('/about/videos', [AdminAboutController::class, 'deleteVideo'])->name('admin.cms.about.videos.delete');
+        Route::post('/about/experience', [AdminAboutController::class, 'updateExperience'])->name('admin.cms.about.experience');
+
         Route::get('/pages', [AdminCmsPageController::class, 'index'])->name('admin.cms.pages');
         Route::get('/pages/add', fn () => Inertia::render('admin/cms/AddPage'))->name('admin.cms.pages.add');
         Route::post('/pages', [AdminCmsPageController::class, 'store'])->name('admin.cms.pages.store');
