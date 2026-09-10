@@ -64,6 +64,7 @@ Route::get('/about', [AboutController::class, 'index'])->name('about');
 
 // Product Detail Route
 Route::get('/product', [App\Http\Controllers\ProductController::class, 'index'])->name('product.index');
+Route::get('/search', [App\Http\Controllers\ProductController::class, 'search'])->name('product.search');
 Route::get('/popular-products', [App\Http\Controllers\ProductController::class, 'popular'])->name('popular-products');
 Route::get('/category/{categorySlug}', [App\Http\Controllers\ProductController::class, 'category'])->name('category.show');
 Route::get('/category/{categorySlug}/product/{slug}', [App\Http\Controllers\ProductController::class, 'showByCategory'])->name('product.show.category');

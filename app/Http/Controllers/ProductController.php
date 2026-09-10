@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Services\SettingsService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -28,6 +29,55 @@ final class ProductController extends Controller
 
         return redirect()->route('category.show', [
             'categorySlug' => $firstCategory->slug,
+        ]);
+    }
+
+    /** Display active products matching a public search query. */
+    public function search(Request $request): Response
+    {
+        $query = mb_trim((string) $request->query('q', ''));
+        $products = collect();
+
+        if ($query !== '') {
+            $products = Product::search($query)->get()->filter(
+                fn (Product $product): bool => $product->isActive(),
+            );
+        }
+
+        $categories = Category::active()->get(['_id', 'name', 'slug'])->keyBy(
+            fn (Category $category): string => (string) $category->getKey(),
+        );
+        $results = $products->map(function (Product $product) use ($categories): array {
+            $category = $product->category_id ? $categories->get((string) $product->category_id) : null;
+
+            return [
+                'id' => (string) $product->getKey(),
+                'productsName' => $product->name,
+                'seoUrl' => $product->slug,
+                'image1' => $product->primary_image,
+                'price' => (float) ($product->sell_price ?? 0),
+                'mrp' => $product->mrp !== null ? (float) $product->mrp : 0,
+                'discount' => $product->discount_percentage,
+                'categoryId' => $product->category_id ? (string) $product->category_id : null,
+                'categoryName' => $category?->name,
+                'categorySlug' => $category?->slug,
+            ];
+        })->values();
+
+        $cart = session()->get('cart', []);
+        $wishlist = session()->get('wishlist', []);
+
+        return Inertia::render('SearchResults', [
+            'settings' => (object) SettingsService::getSettingsData(),
+            'query' => $query,
+            'products' => $results,
+            'cart_count' => array_sum(array_column($cart, 'quantity')),
+            'cart_price' => array_sum(array_map(fn (array $item): float => (float) $item['price'] * (int) $item['quantity'], $cart)),
+            'cart_items' => array_values($cart),
+            'wishlist_count' => count($wishlist),
+            'wishlist_items' => [],
+            'wishlist_ids' => $wishlist,
+            'auth' => ['user' => Auth::user()],
         ]);
     }
 
