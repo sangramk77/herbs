@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\CompleteOtpProfileRequest;
 use App\Http\Requests\Auth\SendOtpRequest;
 use App\Http\Requests\Auth\VerifyOtpRequest;
 use App\Models\User;
@@ -85,8 +86,16 @@ final class OtpController extends Controller
         return response()->json([
             'success' => true,
             'message' => $isNewUser ? 'Account created successfully!' : 'Welcome back!',
+            'is_new_user' => $isNewUser,
             'redirect' => $validated['redirect'] ?? '/',
             'csrf_token' => csrf_token(),
         ]);
+    }
+
+    public function completeProfile(CompleteOtpProfileRequest $request): JsonResponse
+    {
+        $request->user()->update($request->validated());
+
+        return response()->json(['success' => true, 'message' => 'Profile completed successfully.']);
     }
 }

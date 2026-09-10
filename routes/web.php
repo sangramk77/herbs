@@ -49,6 +49,7 @@ Route::prefix('auth/otp')->middleware('guest')->group(function () {
     Route::post('/verify', [OtpController::class, 'verify'])->name('auth.otp.verify');
     Route::post('/resend', [OtpController::class, 'resend'])->name('auth.otp.resend');
 });
+Route::post('/auth/otp/profile', [OtpController::class, 'completeProfile'])->middleware('auth')->name('auth.otp.profile');
 
 Route::get('/register', function (Request $request) {
     $redirect = $request->query('redirect');

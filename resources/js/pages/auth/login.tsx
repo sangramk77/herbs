@@ -8,13 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
 
-type Step = 'phone' | 'otp';
+type Step = 'phone' | 'otp' | 'profile';
 type OtpResponse = {
     success?: boolean;
     message?: string;
     expires_in?: number;
     redirect?: string;
     csrf_token?: string;
+    is_new_user?: boolean;
 };
 interface LoginProps {
     status?: string;
@@ -32,6 +33,8 @@ export default function Login({ status, redirectTo }: LoginProps) {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [remaining, setRemaining] = useState(0);
+    const [profileName, setProfileName] = useState('');
+    const [profileEmail, setProfileEmail] = useState('');
     const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
     useEffect(() => {
@@ -113,8 +116,47 @@ export default function Login({ status, redirectTo }: LoginProps) {
                 document
                     .querySelector('meta[name="csrf-token"]')
                     ?.setAttribute('content', data.csrf_token);
+            if (data.is_new_user) {
+                setStep('profile');
+                return;
+            }
             toast.success(data.message ?? 'Welcome back!');
             router.visit(data.redirect ?? redirectTo ?? '/');
+        } catch {
+            setError('Network error. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const completeProfile = async () => {
+        if (!profileName.trim()) {
+            setError('Please enter your name.');
+            return;
+        }
+        setLoading(true);
+        setError('');
+        try {
+            const response = await fetch('/auth/otp/profile', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken(),
+                },
+                body: JSON.stringify({
+                    name: profileName.trim(),
+                    email: profileEmail.trim() || null,
+                }),
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                setError(data.message ?? 'Unable to save profile.');
+                return;
+            }
+            toast.success('Welcome to Herbs!');
+            router.visit(redirectTo ?? '/');
         } catch {
             setError('Network error. Please try again.');
         } finally {
@@ -167,6 +209,46 @@ export default function Login({ status, redirectTo }: LoginProps) {
                     >
                         {loading && <Loader2 className="animate-spin" />} Send
                         OTP
+                    </Button>
+                </div>
+            ) : step === 'profile' ? (
+                <div className="space-y-5">
+                    <p className="text-sm text-muted-foreground">
+                        Tell us a little about yourself to complete your
+                        account.
+                    </p>
+                    <div className="grid gap-2">
+                        <Label htmlFor="profile-name">Name</Label>
+                        <Input
+                            id="profile-name"
+                            value={profileName}
+                            onChange={(event) =>
+                                setProfileName(event.target.value)
+                            }
+                            autoFocus
+                        />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="profile-email">Email (optional)</Label>
+                        <Input
+                            id="profile-email"
+                            type="email"
+                            value={profileEmail}
+                            onChange={(event) =>
+                                setProfileEmail(event.target.value)
+                            }
+                        />
+                    </div>
+                    {error && (
+                        <p className="text-sm text-destructive">{error}</p>
+                    )}
+                    <Button
+                        className="w-full"
+                        onClick={() => void completeProfile()}
+                        disabled={loading}
+                    >
+                        {loading && <Loader2 className="animate-spin" />}{' '}
+                        Continue
                     </Button>
                 </div>
             ) : (
