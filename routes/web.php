@@ -27,6 +27,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PincodeController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\WishlistController;
 use Illuminate\Http\Request;
@@ -65,6 +66,7 @@ Route::get('/about', [AboutController::class, 'index'])->name('about');
 // Product Detail Route
 Route::get('/product', [App\Http\Controllers\ProductController::class, 'index'])->name('product.index');
 Route::get('/search', [App\Http\Controllers\ProductController::class, 'search'])->name('product.search');
+Route::get('/api/pincode/{pincode}', [PincodeController::class, 'show'])->whereNumber('pincode')->name('api.pincode.show');
 Route::get('/popular-products', [App\Http\Controllers\ProductController::class, 'popular'])->name('popular-products');
 Route::get('/category/{categorySlug}', [App\Http\Controllers\ProductController::class, 'category'])->name('category.show');
 Route::get('/category/{categorySlug}/product/{slug}', [App\Http\Controllers\ProductController::class, 'showByCategory'])->name('product.show.category');
@@ -144,6 +146,8 @@ Route::prefix('admin')->middleware(['auth:admin', 'admin'])->group(function () {
         ->name('admin.products.index');
     Route::get('/products/create', [ProductController::class, 'create'])
         ->name('admin.products.create');
+    Route::post('/products/quick-create', [ProductController::class, 'quickCreate'])
+        ->name('admin.products.quick-create');
     Route::post('/products', [ProductController::class, 'store'])
         ->name('admin.products.store');
     Route::get('/products/{id}/edit', [ProductController::class, 'edit'])

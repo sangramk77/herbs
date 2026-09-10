@@ -12,9 +12,11 @@ use App\Models\Product;
 use App\Models\Unit;
 use App\Services\ImageService;
 use App\Services\ProductVideoService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -196,6 +198,36 @@ final class ProductController extends Controller
             'categories' => $categories,
             'units' => $this->getUnitOptions(),
         ]);
+    }
+
+    /**
+     * Create the minimum valid draft needed to begin asynchronous video uploads.
+     * The normal edit screen completes all optional product details afterwards.
+     */
+    public function quickCreate(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'category_id' => ['required', 'exists:categories,_id'],
+            'sell_price' => ['required', 'numeric', 'min:0'],
+            'mrp' => ['nullable', 'numeric', 'min:0', 'gte:sell_price'],
+            'stock' => ['nullable', 'integer', 'min:0'],
+            'primary_image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ]);
+
+        $slug = Product::generateUniqueSlug($data['name']);
+        $image = $this->imageService->uploadProductImage($request->file('primary_image'), $slug);
+        $product = Product::create([
+            'name' => $data['name'], 'slug' => $slug, 'category_id' => $data['category_id'],
+            'description' => $data['name'].' - Description pending.', 'short_description' => $data['name'],
+            'sell_price' => (float) $data['sell_price'], 'mrp' => isset($data['mrp']) ? (float) $data['mrp'] : null,
+            'stock' => (int) ($data['stock'] ?? 0), 'primary_image' => $image, 'status' => 'draft',
+            'created_by' => Auth::guard('admin')->id(),
+        ]);
+
+        Log::info('admin.products.quick-create.created', ['product_id' => (string) $product->getKey()]);
+
+        return response()->json(['product_id' => (string) $product->getKey(), 'slug' => $slug, 'primary_image' => $image]);
     }
 
     /**

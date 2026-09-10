@@ -108,6 +108,9 @@ export default function Checkout({
         initialAppliedCoupon?.code ?? '',
     );
     const [stateOpen, setStateOpen] = React.useState(false);
+    const [pincodeLookupStatus, setPincodeLookupStatus] = React.useState<
+        'idle' | 'loading' | 'found' | 'not_found'
+    >('idle');
     const isAuthenticated = Boolean(user);
     const checkoutDraftKey = 'checkout_form_draft';
     const emptyDraft: CheckoutDraft = {
@@ -229,6 +232,49 @@ export default function Checkout({
         setCouponCode(initialAppliedCoupon?.code ?? '');
     }, [initialAppliedCoupon]);
 
+    React.useEffect(() => {
+        if (!/^\d{6}$/.test(formData.pincode)) {
+            setPincodeLookupStatus('idle');
+            return;
+        }
+
+        const controller = new AbortController();
+        const lookup = async () => {
+            setPincodeLookupStatus('loading');
+            try {
+                const response = await fetch(
+                    `/api/pincode/${formData.pincode}`,
+                    {
+                        headers: { Accept: 'application/json' },
+                        signal: controller.signal,
+                    },
+                );
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    setPincodeLookupStatus('not_found');
+                    return;
+                }
+                setFormData((previous) => ({
+                    ...previous,
+                    city: data.city,
+                    state: data.state,
+                }));
+                setErrors((previous) => ({
+                    ...previous,
+                    city: '',
+                    state: '',
+                    pincode: '',
+                }));
+                setPincodeLookupStatus('found');
+            } catch (error) {
+                if ((error as Error).name !== 'AbortError')
+                    setPincodeLookupStatus('not_found');
+            }
+        };
+        void lookup();
+        return () => controller.abort();
+    }, [formData.pincode]);
+
     if (!cart || cart.length === 0) {
         return (
             <SiteLayout settings={settings} products={products} user={user}>
@@ -309,6 +355,11 @@ export default function Checkout({
         if (!/^\d{6}$/.test(value)) {
             return 'Pincode must be exactly 6 digits';
         }
+        if (pincodeLookupStatus === 'loading') return 'Verifying PIN code…';
+        if (pincodeLookupStatus === 'not_found')
+            return 'Please enter a valid serviceable PIN code.';
+        if (pincodeLookupStatus !== 'found')
+            return 'Please wait while we verify this PIN code.';
         return '';
     };
 
@@ -952,6 +1003,18 @@ export default function Checkout({
                                                     }
                                                     disabled={isProcessing}
                                                 />
+                                                {pincodeLookupStatus ===
+                                                    'loading' && (
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Verifying PIN code…
+                                                    </p>
+                                                )}
+                                                {pincodeLookupStatus ===
+                                                    'found' && (
+                                                    <p className="text-xs text-emerald-600">
+                                                        City and state updated.
+                                                    </p>
+                                                )}
                                                 {errors.pincode && (
                                                     <p className="text-sm text-red-500">
                                                         {errors.pincode}
