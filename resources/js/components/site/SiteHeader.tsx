@@ -145,11 +145,10 @@ export function SiteHeader({
             <MobileMenu
                 navItems={navItems}
                 products={megaMenuProducts}
+                categories={categories}
                 cartCount={cart.count}
                 isAuthenticated={resolvedIsAuthenticated}
                 socialLinks={socialLinks}
-                logoUrl={logoUrl}
-                isHomePage={isHomePage}
             />
         </header>
     );

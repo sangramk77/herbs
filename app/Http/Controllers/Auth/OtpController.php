@@ -63,6 +63,14 @@ final class OtpController extends Controller
             ->where('phone', $phone)
             ->where('role', User::ROLE_USER)
             ->first();
+
+        if ($user && ! $user->is_active) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This account has been deactivated. Please contact support for assistance.',
+            ], 403);
+        }
+
         $isNewUser = $user === null;
 
         if ($isNewUser) {
@@ -90,13 +98,13 @@ final class OtpController extends Controller
 
         Auth::login($user, remember: true);
         $request->session()->regenerate();
-        $request->session()->flash('login_greeting', true);
+        $request->session()->put('show_confetti_login', true);
 
         return response()->json([
             'success' => true,
             'message' => $isNewUser ? 'Account created successfully!' : 'Welcome back!',
             'is_new_user' => $isNewUser,
-            'redirect' => $validated['redirect'] ?? '/',
+            'redirect' => $validated['redirect'] ?? route('dashboard', absolute: false),
             'csrf_token' => csrf_token(),
         ]);
     }

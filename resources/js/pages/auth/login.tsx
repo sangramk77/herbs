@@ -103,7 +103,7 @@ export default function Login({ status, redirectTo }: LoginProps) {
                 body: JSON.stringify({
                     phone,
                     otp: value,
-                    redirect: redirectTo ?? '/',
+                    redirect: redirectTo ?? '/dashboard',
                 }),
             });
             const data = (await response.json()) as OtpResponse;
@@ -121,7 +121,7 @@ export default function Login({ status, redirectTo }: LoginProps) {
                 return;
             }
             toast.success(data.message ?? 'Welcome back!');
-            router.visit(data.redirect ?? redirectTo ?? '/');
+            router.visit(data.redirect ?? redirectTo ?? '/dashboard');
         } catch {
             setError('Network error. Please try again.');
         } finally {
@@ -156,7 +156,7 @@ export default function Login({ status, redirectTo }: LoginProps) {
                 return;
             }
             toast.success('Welcome to Herbs!');
-            router.visit(redirectTo ?? '/');
+            router.visit(redirectTo ?? '/dashboard');
         } catch {
             setError('Network error. Please try again.');
         } finally {
