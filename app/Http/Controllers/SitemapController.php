@@ -8,10 +8,13 @@ use App\Models\Blog;
 use App\Models\Category;
 use App\Models\CmsPage;
 use App\Models\Product;
+use App\Services\SettingsService;
 use Carbon\CarbonInterface;
 use DateTimeInterface;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 
 final class SitemapController extends Controller
 {
@@ -26,6 +29,23 @@ final class SitemapController extends Controller
         return response($xml, 200, [
             'Content-Type' => 'application/xml; charset=UTF-8',
         ]);
+    }
+
+    /** Human-readable sitemap directory. */
+    public function show(): InertiaResponse
+    {
+        return Inertia::render('Sitemap', [
+            'settings' => (object) SettingsService::getSettingsData(),
+            'sitemapIndexUrl' => url('/sitemap.xml'),
+        ]);
+    }
+
+    /** Current Herbs sitemap fits one XML document; reserve chunk URL parity. */
+    public function chunk(int $page): Response
+    {
+        abort_unless($page === 1, 404);
+
+        return $this->index();
     }
 
     private function buildXml(): string

@@ -68,6 +68,8 @@ Route::get('/about', [AboutController::class, 'index'])->name('about');
 Route::get('/product', [App\Http\Controllers\ProductController::class, 'index'])->name('product.index');
 Route::get('/search', [App\Http\Controllers\ProductController::class, 'search'])->name('product.search');
 Route::get('/api/pincode/{pincode}', [PincodeController::class, 'show'])->whereNumber('pincode')->name('api.pincode.show');
+Route::get('/sitemap', [SitemapController::class, 'show'])->name('sitemap');
+Route::get('/sitemap-{page}.xml', [SitemapController::class, 'chunk'])->whereNumber('page')->name('sitemap.chunk');
 Route::get('/popular-products', [App\Http\Controllers\ProductController::class, 'popular'])->name('popular-products');
 Route::get('/category/{categorySlug}', [App\Http\Controllers\ProductController::class, 'category'])->name('category.show');
 Route::get('/category/{categorySlug}/product/{slug}', [App\Http\Controllers\ProductController::class, 'showByCategory'])->name('product.show.category');
