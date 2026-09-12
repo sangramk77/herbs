@@ -2,7 +2,8 @@ allowBuilds:
   esbuild: true
   '@parcel/watcher': true
   unrs-resolver: true
-  puppeteer: set this to true or false
+  # Puppeteer's postinstall script downloads the browser binary used by the app.
+  puppeteer: true
 
 publicHoistPattern:
   - '@inertiajs/core'
