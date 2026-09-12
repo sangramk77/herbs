@@ -9,6 +9,7 @@ use App\Jobs\SendOrderAcceptedEmail;
 use App\Jobs\SendOrderDeliveredEmail;
 use App\Jobs\SendOrderRejectedEmail;
 use App\Jobs\SendOrderShippedEmail;
+use App\Jobs\SendOrderSms;
 use App\Models\Order;
 use App\Models\Product;
 use Exception;
@@ -188,6 +189,7 @@ final class OrderController extends Controller
             if ($status === 'Order Accepted') {
                 try {
                     SendOrderAcceptedEmail::dispatch($order);
+                    SendOrderSms::dispatch($order, 'accepted');
                 } catch (Exception $e) {
                     \Illuminate\Support\Facades\Log::error('Failed to dispatch order accepted email job', [
                         'order_id' => $order->order_id,
@@ -204,6 +206,7 @@ final class OrderController extends Controller
 
                 try {
                     SendOrderRejectedEmail::dispatch($order, $reason);
+                    SendOrderSms::dispatch($order, 'rejected', $reason);
                 } catch (Exception $e) {
                     \Illuminate\Support\Facades\Log::error('Failed to dispatch order rejected email job', [
                         'order_id' => $order->order_id,
@@ -215,6 +218,7 @@ final class OrderController extends Controller
             if ($status === 'Shipped') {
                 try {
                     SendOrderShippedEmail::dispatch($order);
+                    SendOrderSms::dispatch($order, 'shipped');
                 } catch (Exception $e) {
                     \Illuminate\Support\Facades\Log::error('Failed to dispatch order shipped email job', [
                         'order_id' => $order->order_id,
@@ -226,6 +230,7 @@ final class OrderController extends Controller
             if ($status === 'Delivered') {
                 try {
                     SendOrderDeliveredEmail::dispatch($order);
+                    SendOrderSms::dispatch($order, 'delivered');
                 } catch (Exception $e) {
                     \Illuminate\Support\Facades\Log::error('Failed to dispatch order delivered email job', [
                         'order_id' => $order->order_id,
