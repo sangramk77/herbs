@@ -8,12 +8,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\CompleteOtpProfileRequest;
 use App\Http\Requests\Auth\SendOtpRequest;
 use App\Http\Requests\Auth\VerifyOtpRequest;
+use App\Jobs\SendWelcomeEmail;
+use App\Jobs\SendWelcomeSms;
 use App\Models\User;
 use App\Services\OtpService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Throwable;
 
 /** Customer-only mobile OTP authentication. Admins retain password login. */
 final class OtpController extends Controller
@@ -72,6 +75,12 @@ final class OtpController extends Controller
                 'phone_verified_at' => now(),
                 'email_verified_at' => now(),
             ]);
+
+            try {
+                SendWelcomeSms::dispatch($user);
+            } catch (Throwable $exception) {
+                report($exception);
+            }
         } else {
             $user->update([
                 'phone_verified_at' => now(),
@@ -94,7 +103,17 @@ final class OtpController extends Controller
 
     public function completeProfile(CompleteOtpProfileRequest $request): JsonResponse
     {
-        $request->user()->update($request->validated());
+        $user = $request->user();
+        $hadEmail = filled($user->email);
+        $user->update($request->validated());
+
+        if (! $hadEmail && filled($user->email)) {
+            try {
+                SendWelcomeEmail::dispatch($user->fresh());
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+        }
 
         return response()->json(['success' => true, 'message' => 'Profile completed successfully.']);
     }

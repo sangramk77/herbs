@@ -18,6 +18,7 @@ import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
 import { RelatedProducts } from '@/components/product/RelatedProducts';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
+import { WhatsAppOverlay } from '@/components/site/WhatsAppOverlay';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -932,6 +933,7 @@ export default function ProductDetail({
             </main>
 
             <SiteFooter settings={settings} />
+            <WhatsAppOverlay phone={settings.phone1} />
         </div>
     );
 }

@@ -6,6 +6,7 @@ namespace App\Jobs;
 
 use App\Mail\OrderPlacedEmail;
 use App\Models\Order;
+use App\Services\InvoicePdfService;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -28,7 +29,7 @@ final class SendOrderPlacedEmail implements ShouldQueue
         public Order $order,
     ) {}
 
-    public function handle(): void
+    public function handle(InvoicePdfService $invoicePdfService): void
     {
         $email = (string) ($this->order->customer_email ?? '');
         if ($email === '') {
@@ -40,7 +41,8 @@ final class SendOrderPlacedEmail implements ShouldQueue
         }
 
         try {
-            Mail::to($email)->send(new OrderPlacedEmail($this->order));
+            $invoicePdfPath = $invoicePdfService->generateForOrder($this->order);
+            Mail::to($email)->send(new OrderPlacedEmail($this->order, $invoicePdfPath));
 
             Log::info('Order placed email sent', [
                 'order_id' => $this->order->order_id,
