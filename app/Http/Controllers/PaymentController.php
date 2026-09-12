@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Jobs\SendOrderPlacedEmail;
+use App\Jobs\SendOrderSms;
 use App\Models\Coupon;
 use App\Models\CouponUsage;
 use App\Models\OnlinePayment;
@@ -520,6 +521,7 @@ final class PaymentController extends Controller
 
         try {
             SendOrderPlacedEmail::dispatch($order);
+            SendOrderSms::dispatch($order, 'placed');
         } catch (Exception $e) {
             Log::error('Failed to dispatch order placed email job', [
                 'order_id' => $order->order_id,

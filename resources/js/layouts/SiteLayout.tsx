@@ -3,6 +3,7 @@ import { ReactNode } from 'react';
 
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
+import { WhatsAppOverlay } from '@/components/site/WhatsAppOverlay';
 import type {
     CartInfo,
     NavCategory,
@@ -211,6 +212,7 @@ export default function SiteLayout({
                     settings={settings}
                     footerPages={resolvedFooterPages}
                 />
+                <WhatsAppOverlay phone={settings.phone1} />
             </div>
 
             {footerScripts.map((script) => (

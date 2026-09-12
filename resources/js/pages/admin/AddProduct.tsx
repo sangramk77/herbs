@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, router } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LoaderCircle, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import AdminLayout from '@/layouts/AdminLayout';
+import httpClient from '@/lib/http-client';
 import { cn } from '@/lib/utils';
 
 interface Category {
@@ -92,6 +93,13 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 type EditedField = 'description' | 'metaTitle' | 'metaDescription';
+type VideoConversionStatus = {
+    id: string;
+    status: 'queued' | 'processing' | 'completed' | 'failed';
+    progress?: number;
+    output?: string | null;
+    error?: string | null;
+};
 
 const steps = [
     { id: 1, name: 'General', description: 'Basic product information' },
@@ -110,7 +118,12 @@ export default function AddProduct({
     errors = EMPTY_ERRORS,
 }: AddProductProps) {
     const [currentStep, setCurrentStep] = useState(1);
-    const [videos, setVideos] = useState<File[]>([]);
+    const [draftProductId, setDraftProductId] = useState<string | null>(null);
+    const [videoState, setVideoState] = useState<{
+        videos: string[];
+        statuses: VideoConversionStatus[];
+    }>({ videos: [], statuses: [] });
+    const [uploadingVideo, setUploadingVideo] = useState(false);
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -217,6 +230,37 @@ export default function AddProduct({
         form.setValue('discount', '0');
     }, [form, watchedMrp, watchedSellPrice]);
 
+    useEffect(() => {
+        if (
+            !draftProductId ||
+            !videoState.statuses.some((video) =>
+                ['queued', 'processing'].includes(video.status),
+            )
+        ) {
+            return;
+        }
+
+        const timer = window.setInterval(async () => {
+            const response = await fetch(
+                `/admin/products/${draftProductId}/video-status`,
+                { headers: { Accept: 'application/json' } },
+            );
+
+            if (response.ok) {
+                const data = (await response.json()) as {
+                    videos?: string[];
+                    video_conversion_status?: VideoConversionStatus[];
+                };
+                setVideoState({
+                    videos: data.videos ?? [],
+                    statuses: data.video_conversion_status ?? [],
+                });
+            }
+        }, 3000);
+
+        return () => window.clearInterval(timer);
+    }, [draftProductId, videoState.statuses]);
+
     // Auto-generate slug and optional SEO fields when product name changes.
     useEffect(() => {
         const productName = watchedProductName || '';
@@ -283,6 +327,111 @@ export default function AddProduct({
         }
     };
 
+    const ensureDraftProduct = async (): Promise<string | null> => {
+        if (draftProductId) {
+            return draftProductId;
+        }
+
+        const valid = await form.trigger([
+            'productName',
+            'category_id',
+            'mrp',
+            'sellPrice',
+            'image1',
+        ]);
+        const values = form.getValues();
+
+        if (!valid || !(values.image1 instanceof File)) {
+            toast.error(
+                'Fill the product name, category, prices, and main image before uploading a video.',
+            );
+            return null;
+        }
+
+        const payload = new FormData();
+        payload.append('name', values.productName);
+        payload.append('category_id', values.category_id);
+        payload.append('sell_price', values.sellPrice);
+        payload.append('mrp', values.mrp);
+        payload.append('stock', values.stock || '0');
+        payload.append('primary_image', values.image1);
+
+        try {
+            const response = await httpClient.post<{
+                product_id: string;
+                primary_image: string;
+            }>('/admin/products/quick-create', payload);
+            setDraftProductId(response.data.product_id);
+            form.setValue(
+                'image1',
+                `/uploads/products/${response.data.primary_image}`,
+            );
+            toast.success('Draft product created. Video upload is ready.');
+
+            return response.data.product_id;
+        } catch (error) {
+            const message = httpClient.isAxiosError(error)
+                ? error.response?.data?.message
+                : null;
+            toast.error(
+                typeof message === 'string'
+                    ? message
+                    : 'Could not create a draft product for video upload.',
+            );
+
+            return null;
+        }
+    };
+
+    const uploadVideos = async (files: File[]) => {
+        const available =
+            2 -
+            videoState.videos.length -
+            videoState.statuses.filter((video) =>
+                ['queued', 'processing'].includes(video.status),
+            ).length;
+        const selected = files.slice(0, Math.max(available, 0));
+
+        if (selected.length === 0) {
+            toast.error('A product can have at most two videos.');
+            return;
+        }
+
+        const productId = await ensureDraftProduct();
+        if (!productId) return;
+
+        setUploadingVideo(true);
+        try {
+            for (const file of selected) {
+                const payload = new FormData();
+                payload.append('video', file);
+                const response = await httpClient.post<{
+                    message?: string;
+                    videos?: string[];
+                    video_conversion_status?: VideoConversionStatus[];
+                }>(`/admin/products/${productId}/videos/upload`, payload);
+                setVideoState({
+                    videos: response.data.videos ?? [],
+                    statuses: response.data.video_conversion_status ?? [],
+                });
+            }
+            toast.success(
+                'Video uploaded. Conversion started in the background.',
+            );
+        } catch (error) {
+            const message = httpClient.isAxiosError(error)
+                ? error.response?.data?.message
+                : null;
+            toast.error(
+                typeof message === 'string'
+                    ? message
+                    : 'Failed to upload video.',
+            );
+        } finally {
+            setUploadingVideo(false);
+        }
+    };
+
     const onSubmit = (data: FormValues) => {
         // Only submit if we're on the last step
         if (currentStep !== steps.length) {
@@ -322,9 +471,10 @@ export default function AddProduct({
             measurement_increment: data.measurementUnitId
                 ? Number(data.measurementIncrement)
                 : null,
-            primary_image: data.image1,
+            ...(draftProductId || !(data.image1 instanceof File)
+                ? {}
+                : { primary_image: data.image1 }),
             images: [data.image2, data.image3, data.image4].filter(Boolean),
-            videos,
             meta_title: data.metaTitle,
             meta_description: data.metaDescription,
             og_title: data.ogTitle,
@@ -339,7 +489,14 @@ export default function AddProduct({
         };
 
         // Submit the form using Inertia's router
-        router.post('/admin/products', formData, {
+        const submitUrl = draftProductId
+            ? `/admin/products/${draftProductId}`
+            : '/admin/products';
+        const submitData = draftProductId
+            ? { ...formData, _method: 'put' }
+            : formData;
+
+        router.post(submitUrl, submitData, {
             onSuccess: () => {
                 toast.success('Product created successfully!');
             },
@@ -740,33 +897,76 @@ export default function AddProduct({
                                                 <Input
                                                     id="product-videos"
                                                     type="file"
-                                                    accept="video/mp4,video/quicktime,video/webm"
+                                                    accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm"
                                                     multiple
-                                                    onChange={(event) =>
-                                                        setVideos(
+                                                    disabled={uploadingVideo}
+                                                    onChange={(event) => {
+                                                        const files =
                                                             Array.from(
                                                                 event.target
                                                                     .files ??
                                                                     [],
-                                                            ).slice(0, 2),
-                                                        )
-                                                    }
+                                                            );
+                                                        event.target.value = '';
+                                                        void uploadVideos(
+                                                            files,
+                                                        );
+                                                    }}
                                                 />
                                                 <FormDescription>
-                                                    Up to two videos; each is
-                                                    converted in the background
-                                                    after saving.
+                                                    Up to two videos. The first
+                                                    upload creates a draft, then
+                                                    conversion starts
+                                                    immediately.
                                                 </FormDescription>
-                                                {videos.length > 0 && (
+                                                {uploadingVideo && (
+                                                    <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                        <LoaderCircle className="size-4 animate-spin" />
+                                                        Uploading video…
+                                                    </p>
+                                                )}
+                                                {videoState.statuses.length >
+                                                    0 && (
                                                     <ul className="space-y-1 text-sm text-muted-foreground">
-                                                        {videos.map((video) => (
-                                                            <li
-                                                                key={`${video.name}-${video.lastModified}`}
-                                                            >
-                                                                {video.name}
-                                                            </li>
-                                                        ))}
+                                                        {videoState.statuses.map(
+                                                            (video) => (
+                                                                <li
+                                                                    key={
+                                                                        video.id
+                                                                    }
+                                                                >
+                                                                    Video
+                                                                    conversion:{' '}
+                                                                    {
+                                                                        video.status
+                                                                    }
+                                                                    {video.status ===
+                                                                    'processing'
+                                                                        ? ` (${video.progress ?? 0}%)`
+                                                                        : ''}
+                                                                    {video.error
+                                                                        ? ` — ${video.error}`
+                                                                        : ''}
+                                                                </li>
+                                                            ),
+                                                        )}
                                                     </ul>
+                                                )}
+                                                {videoState.videos.length >
+                                                    0 && (
+                                                    <p className="text-sm text-emerald-600">
+                                                        {
+                                                            videoState.videos
+                                                                .length
+                                                        }{' '}
+                                                        video
+                                                        {videoState.videos
+                                                            .length === 1
+                                                            ? ''
+                                                            : 's'}{' '}
+                                                        ready for storefront
+                                                        playback.
+                                                    </p>
                                                 )}
                                             </div>
                                             <FormField

@@ -8,12 +8,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\CompleteOtpProfileRequest;
 use App\Http\Requests\Auth\SendOtpRequest;
 use App\Http\Requests\Auth\VerifyOtpRequest;
+use App\Jobs\SendWelcomeEmail;
+use App\Jobs\SendWelcomeSms;
 use App\Models\User;
 use App\Services\OtpService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Throwable;
 
 /** Customer-only mobile OTP authentication. Admins retain password login. */
 final class OtpController extends Controller
@@ -60,6 +63,14 @@ final class OtpController extends Controller
             ->where('phone', $phone)
             ->where('role', User::ROLE_USER)
             ->first();
+
+        if ($user && ! $user->is_active) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This account has been deactivated. Please contact support for assistance.',
+            ], 403);
+        }
+
         $isNewUser = $user === null;
 
         if ($isNewUser) {
@@ -72,6 +83,12 @@ final class OtpController extends Controller
                 'phone_verified_at' => now(),
                 'email_verified_at' => now(),
             ]);
+
+            try {
+                SendWelcomeSms::dispatch($user);
+            } catch (Throwable $exception) {
+                report($exception);
+            }
         } else {
             $user->update([
                 'phone_verified_at' => now(),
@@ -81,20 +98,30 @@ final class OtpController extends Controller
 
         Auth::login($user, remember: true);
         $request->session()->regenerate();
-        $request->session()->flash('login_greeting', true);
+        $request->session()->put('show_confetti_login', true);
 
         return response()->json([
             'success' => true,
             'message' => $isNewUser ? 'Account created successfully!' : 'Welcome back!',
             'is_new_user' => $isNewUser,
-            'redirect' => $validated['redirect'] ?? '/',
+            'redirect' => $validated['redirect'] ?? route('dashboard', absolute: false),
             'csrf_token' => csrf_token(),
         ]);
     }
 
     public function completeProfile(CompleteOtpProfileRequest $request): JsonResponse
     {
-        $request->user()->update($request->validated());
+        $user = $request->user();
+        $hadEmail = filled($user->email);
+        $user->update($request->validated());
+
+        if (! $hadEmail && filled($user->email)) {
+            try {
+                SendWelcomeEmail::dispatch($user->fresh());
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+        }
 
         return response()->json(['success' => true, 'message' => 'Profile completed successfully.']);
     }

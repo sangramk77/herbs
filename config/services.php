@@ -43,6 +43,12 @@ return [
         'sender_id' => env('TEXT2INDIA_SENDER_ID'),
         'templates' => [
             'otp' => env('TEXT2INDIA_OTP_TEMPLATE_ID'),
+            'welcome' => env('TEXT2INDIA_WELCOME_TEMPLATE_ID'),
+            'order_received' => env('TEXT2INDIA_ORDER_RECEIVED_TEMPLATE_ID'),
+            'order_confirmed' => env('TEXT2INDIA_ORDER_CONFIRMED_TEMPLATE_ID'),
+            'order_shipped' => env('TEXT2INDIA_ORDER_SHIPPED_TEMPLATE_ID'),
+            'order_delivered' => env('TEXT2INDIA_ORDER_DELIVERED_TEMPLATE_ID'),
+            'order_failed' => env('TEXT2INDIA_ORDER_FAILED_TEMPLATE_ID'),
         ],
     ],
 

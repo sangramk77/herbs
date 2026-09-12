@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Jobs\SendOrderPlacedEmail;
+use App\Jobs\SendOrderSms;
 use App\Models\Order;
 use App\Services\CouponService;
 use App\Services\ProductPurchaseService;
@@ -188,6 +189,7 @@ final class CheckoutController extends Controller
         // Email immediately after a successful order placement (do not block checkout on mail failure).
         try {
             SendOrderPlacedEmail::dispatch($order);
+            SendOrderSms::dispatch($order, 'placed');
         } catch (Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to dispatch order placed email job', [
                 'order_id' => $order->order_id,
